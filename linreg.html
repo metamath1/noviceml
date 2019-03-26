@@ -1,0 +1,460 @@
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+        <!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"-->
+        <link rel="stylesheet" href="bootstrap.min.css">
+        <link href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="font.css"><!--http://fontsforweb.com/font/show?id=523-->
+        <style>
+        #jog_dial_w_wheel {
+            background-color: rgb(52,138,189) !important;
+        }
+        
+        #jog_dial_b_wheel {
+            background-color: rgb(166,6,40) !important;
+        }
+        
+        .lcd {
+            text-align:center;
+            font-family:"LCDBOLD";
+            font-size:25px;
+        }
+        
+        .lcd-cost {
+            /*text-align:center;*/
+            font-family:"LCDBOLD";
+            font-size:20px;
+            color: rgb(166,6,40);
+            /*border:2px solid #CCC;*/
+        }
+        
+        .d2 {
+            font-family: D2Coding, 'D2 coding' !important;
+            font-size:15px;
+            text-align:right;
+        }
+        
+        .hypothesis {
+            color: rgb(52,138,189);
+        }
+        
+        .target{
+            color: rgb(213,94,0);
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container" style="border:0px solid #FF0000;">
+            <div class="card" style="float:left;margin-top:5px;">
+                <div class="card-body">
+                    <h4 class="card-title lcd-cost">Linear Regression</h4>
+                    <div id="graph1" style="float:left;width:500px;height:400px;border:0px solid #FF0000;margin-top:10px;"></div>
+                </div>
+            </div>
+            
+            <div class="card" style="float:left;margin-top:5px;">
+                <div class="card-body">
+                    <h4  class="card-title lcd-cost">Cost Function, <span id="cost_meter" class=""></span></h4>
+                    <div id="graph2" style="float:left;width:500px;height:400px;border:0px solid #FF0000;margin-top:10px;margin-left:20px;"></div>
+                </div>
+            </div>
+        </div>    
+        <div class="container" style="border:0px solid #FF0000;margin-top:10px;">   
+            <div style="display:inline-block;border:0px solid #FF0000;vertical-align:top;margin-right:20px;">
+                <div style="display: inline-block;width:120px;border:0px solid #FF0000;margin-top:55px;vertical-align:top;">
+                    <div class="dial">
+                        <div id="jog_dial_w"></div>
+                        <p id="jog_dial_w_meter" class="lcd">
+                            w1 : <span id="w_value">0</span>
+                        </p>
+                    </div>
+                </div>
+                    
+                <div style="display: inline-block;width:120px;border:0px solid #0000FF;margin-top:55px;margin-left:10px;vertical-align:top;">
+                    <div class="dial">
+                        <div id="jog_dial_b"></div>
+                        <p id="jog_dial_b_meter" class="lcd">
+                            w0 : <span id="b_value">0</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="border:0px solid #0000FF;margin-top:10px;margin-left:5px;margin-right:5px;">
+                    <div class="form-group">
+                        <select class="custom-select">
+                            <option value="line">Linear</option>
+                            <option value="sin">Sin</option>
+                        </select>
+                  </div>
+                </div>
+                
+                <div style="border:0px solid #0000FF;margin-top:10px;margin-left:5px;margin-right:5px;">
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="view-cost">
+                            <label class="custom-control-label" for="view-cost">View cost</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display:inline-block;border:0px solid #0000FF;margin-top:13px;margin-left:5px;">
+                <table id="data-table" class="d2 table table-hover">
+                    <thead>
+                    <tr class="table-dark">
+                        <th scope="row"></th>
+                        <th scope="col">D1</th><th scope="col">D2</th>
+                        <th scope="col">D3</th><th scope="col">D4</th>
+                        <th scope="col">D5</th><th scope="col">D6</th>
+                        <th scope="col">D7</th><th scope="col">D8</th>
+                        <th scope="col">D9</th><th scope="col">D10</th>
+                    </tr>
+                    </thead>
+                    <tr id="data-x" class="target">
+                        <th scope="row">x</th>
+                    </tr>
+                    <tr id="data-target" class="target">
+                        <th scope="row">y</th>
+                    </tr>
+                    <tr id="hypothesis" class="hypothesis">
+                        <th scope="row">h</th>
+                    </tr>
+                    <tr id="indivusual_cost">
+                        <th scope="row">(h-y)^2</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="./jogDial.min.js"></script><!--https://github.com/ohsiwon/JogDial.js-->
+        <!--script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script-->
+        <script>
+            /*
+             * numpy.linspace() 함수의 구현
+             * https://gist.github.com/joates/6584908
+             */
+            var linspace = function(a, b, n) {
+                if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+                if(n<2) { return n===1 ? [a] : []; }
+                var i,ret = Array(n);
+                n--;
+                for(i=n; i>=0; i--) { ret[i] = (i*b+(n-i)*a)/n; }
+                return ret;
+            }
+            
+            /*
+             * cost function  1/2 * sum_{i=1}^{N} (t_i - y_i)^2
+             */
+            var cost = function(w, b, X, T) {
+                Y = X.map(function(x){return w*x + b;});
+                C =  0.0;
+                for(var i in X) { C += Math.pow(T[i]-Y[i], 2); }
+                C = (1/2)*C;
+                return C;
+            }
+            
+            /*
+             * calc. cost function value Z for drawing cost function
+             */
+            var draw_cost = function(X, Y, data) {
+                var i, j;
+                
+                var grid_size = X.length;
+                var Z = new Array(grid_size);
+                
+                for(i = 0; i < grid_size; i++) {
+                    Z[i] = new Array(grid_size);
+                    
+                    for(j = 0; j < grid_size; j++)
+                        Z[i][j] = cost(X[j], Y[i], data.x, data.y);
+                }
+                
+                return Z;
+            }
+                
+            $( document ).ready(function() {
+                var GRAPH = document.getElementById('graph1');
+                var GRAPH2 = document.getElementById('graph2');
+                var domain = {'line' : linspace(-1, 1, 100), 'sin' : linspace(-0.5, 1.5, 100)}
+                
+                // 셀렉트 박스로 부터 현재 데이터 세트의 문자열을 받아온다.
+                var cur_data = $( "select" ).val();
+                
+                /*
+                 * 선형 데이터와 사인 데이터를 피팅 그래프에 그리기 위한 plotly 레이아웃을 미리 정의한다.
+                 */
+                var layout_linreg = {'line' : {
+                                            margin: {
+                                                l: 33, r: 20, b: 33, t: 0, pad: 0
+                                            },
+                                            xaxis: {range: [-1, 1], title:'x Axis'},   
+                                            yaxis: {range: [-1, 1], title:'y Axis'},
+                                            legend: {
+                                                x: 0,
+                                                y: 1,
+                                                traceorder: 'normal',
+                                                bgcolor: '#E2E2E2',
+                                                bordercolor: '#E2E2E2',
+                                                borderwidth: 2
+                                            }                                            
+                                        }, 
+                                     'sin' : {
+                                            margin: {
+                                                l: 33, r: 20, b: 33, t: 0, pad: 0
+                                            },
+                                            xaxis: {range: [-0.2, 1.2], title:'x Axis'},   
+                                            yaxis: {range: [-1.6, 1.6], title:'y Axis'},
+                                            legend: {
+                                                x: 0,
+                                                y: 1,
+                                                traceorder: 'normal',
+                                                bgcolor: '#E2E2E2',
+                                                bordercolor: '#E2E2E2',
+                                                borderwidth: 2
+                                            }                                               
+                                        }
+                                    }
+                
+                /*
+                 * 선형 데이터와 사인 데이터에 대한 코스트 그래프를 위한 plotly 레이아웃을 미리 정의한다.
+                 */
+                var layout_cost = { 'line' : {
+                                            margin: {
+                                                l: 33, r: 20, b: 33, t: 0, pad: 0
+                                            },
+                                            xaxis: {range: [-1, 1], title:'w1 Axis'},   
+                                            yaxis: {range: [-1, 1], title:'w0 Axis'}             
+                                        },
+                                    'sin' : {
+                                            margin: {
+                                                l: 33, r: 20, b: 33, t: 0, pad: 0
+                                            },
+                                            xaxis: {range: [-2.0, -1.0], title:'w1 Axis'},   
+                                            yaxis: {range: [0, 1], title:'w0 Axis'}             
+                                        }
+                                    }
+                
+                // 해당 레이아웃을 선택해서 초기화한다.
+                var linreg_layout = layout_linreg[cur_data];
+                var cost_layout   = layout_cost[cur_data];
+                
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                // REGRESSION START
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                var w = 0;
+                var b = 0;
+                
+                // 최초 직선  0*x+0 에 대해서 직선을 한번 그린다.
+                var trace1 = {
+                    x: domain[cur_data],
+                    y: domain[cur_data].map(function(x){return w*x + b;}),
+                    name: 'hyphothesis',
+                };
+                
+                // 미리 세팅된 점데이터 
+                var data = {'line' :{
+                                    x: [-0.75, -0.6, -0.51, -0.3, -0.15, 0.15, 0.45, 0.53, 0.85, 0.98],
+                                    y: [ 0.00, -0.4,  0.02,  0.0,  0.33, 0.50, 0.50, 0.83, 0.70, 0.90],
+                                    mode: 'markers',
+                                    type: 'scatter',
+                                    name: 'data'
+                            }, 
+                            'sin': {
+                                x: [  0.    , 0.1111, 0.2222, 0.3333,  0.4444,  0.5556,  0.6667,  0.7778,  0.8889,  1.    ],
+                                y: [ -0.0834, 0.6315, 0.5576, 1.1941, -0.0167, -0.5104, -0.7654, -1.2339, -0.8544, -0.1818],
+                                mode: 'markers',
+                                type: 'scatter',
+                                name: 'data'
+                            }
+                };
+                
+                // 현재 선택된 데이터를 trace2에 대입하여 초기화 한다.
+                var trace2 = data[cur_data];
+                var data_regression = [trace1, trace2];
+                
+                // 회귀 그래프를 그린다.
+                Plotly.plot(GRAPH, data_regression, linreg_layout);
+                /////////////////////////////////////////////////////////////////////////////////////////////
+                // REGRESSION END
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                // COST FUNCTION START
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                $('#cost_meter').html('COST : <span id="cost_value">'+cost(w, b, trace2.x, trace2.y).toFixed(3)+'</span>');
+                
+                var W = linspace(layout_cost[cur_data]['xaxis']['range'][0], layout_cost[cur_data]['xaxis']['range'][1], 50);
+                var B = linspace(layout_cost[cur_data]['yaxis']['range'][0], layout_cost[cur_data]['yaxis']['range'][1], 50);
+                var Z = draw_cost(W, B, trace2);
+                
+                // COST FUNC. 데이터
+                var trace3 = {
+                        z: Z, x: W, y: B,
+                        type: 'contour',
+                        colorscale: 'Portland',
+                        name: 'cost'
+                }
+                
+                // 현재 위치
+                var trace4 = {
+                    x: [w], y: [b],
+                    type: 'scatter',
+                    name: 'current',
+                    visible: false
+                }
+                
+                var data_contour = [ trace3, trace4 ];
+                
+                Plotly.plot(GRAPH2, data_contour, cost_layout);
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                // COST FUNCTION END
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                // TABLE INIT START
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                $('#data-table tr').each(function(i) {
+                    if(i > 0) {
+                        //insert td for data
+                        var tr = $(this);
+                        var num_data = trace2.x.length;
+                        h = trace2.x.map( function(x){return (w*x)+b;} );
+                        
+                        if(i == 1) { //x
+                            for(j = 0; j < num_data; j++) {
+                                tr.append("<td>"+trace2.x[j]+"</td>")
+                            }
+                        }
+                        else if(i == 2) {//y
+                            for(j = 0; j < num_data; j++) {
+                                tr.append("<td>"+trace2.y[j]+"</td>")
+                            }
+                        }
+                        else if(i == 3) {//h
+                            var hs = '';
+                            for(j = 0; j < num_data; j++) {
+                                if(h[j] >= 0) hs = '+'+h[j].toFixed(3).toString();
+                                else hs = h[j].toFixed(3).toString();
+                                tr.append("<td>"+hs+"</td>");
+                            }
+                        }
+                        else { //(h-y)^2
+                            for(j = 0; j < num_data; j++) {
+                                tr.append("<td>"+Math.pow(h[j]-trace2.y[j], 2).toFixed(3)+"</td>");
+                            }
+                        } 
+                    }
+                });
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                // TABLE INIT END
+                //////////////////////////////////////////////////////////////////////////////////////////////
+                
+                var dial_w = JogDial(document.getElementById('jog_dial_w'), 
+                    {debug:true, wheelSize:'100px', knobSize:'30px', degreeStartAt: 0}).on('mousemove', function(evt) {
+                        w = Math.round(evt.target.rotation)/500.;
+                        b = parseFloat($('#b_value').text());
+                        
+                        $('#jog_dial_w_meter').html('w1 : <span id="w_value">'+w+'</span>');
+                        $('#cost_meter').html('COST : <span id="cost_value">'+cost(w, b, trace2.x, trace2.y).toFixed(3)+'</span>');
+                        
+                        h = domain[cur_data].map( function(x){return (w*x)+b;} );
+                        
+                        $('#hypothesis').children('td').each(function(i) { 
+                            hs = (w*trace2.x[i]+b).toFixed(3)
+                            if(hs >= 0) hs = '+'+hs.toString();
+                            else hs = hs.toString();
+                            $(this).html(hs);
+                        });
+                        
+                        $('#indivusual_cost').children('td').each(function(i) { 
+                            $(this).html( Math.pow((w*trace2.x[i]+b)-trace2.y[i], 2).toFixed(3) );
+                        });
+
+                        Plotly.restyle(GRAPH, {y: [h]}, 0);
+                        Plotly.restyle(GRAPH2, 'x', [[w]], 1);
+                    });
+                
+                var dial_b = JogDial(document.getElementById('jog_dial_b'), 
+                    {debug:true, wheelSize:'100px', knobSize:'30px', degreeStartAt: 0}).on('mousemove', function(evt) {
+                        b = Math.round(evt.target.rotation)/500.;
+                        w = parseFloat($('#w_value').text());
+                 
+                        $('#jog_dial_b_meter').html('w0 : <span id="b_value">'+b+'</span>');
+                        $('#cost_meter').html('COST : <span id="cost_value">'+cost(w, b, trace2.x, trace2.y).toFixed(3)+'</span>');
+                        
+                        h = domain[cur_data].map(function(x){return (w*x)+b;} );
+                        
+                        $('#hypothesis').children('td').each(function(i) { 
+                            hs = (w*trace2.x[i]+b).toFixed(3)
+                            if(hs >= 0) hs = '+'+hs.toString();
+                            else hs = hs.toString();
+                            $(this).html(hs);
+                        });
+                        
+                        $('#indivusual_cost').children('td').each(function(i) { 
+                            $(this).html( Math.pow((w*trace2.x[i]+b)-trace2.y[i], 2).toFixed(3) );
+                        });
+                        
+                        Plotly.restyle(GRAPH, {y: [h]}, 0);
+                        Plotly.restyle(GRAPH2, 'y', [[b]], 1);
+                    });
+                    
+                    
+                $( "select" ).change(function() {
+                    //데이터 셋 교체 
+                    cur_data = $( this ).val();
+                    linreg_layout = layout_linreg[cur_data];
+                    cost_layout   = layout_cost[cur_data];
+                    trace2 = data[cur_data];
+                    
+                    // 직선 다시 그리기
+                    trace1.x = domain[cur_data];
+                    trace1.y = domain[cur_data].map(function(x){return w*x + b;});
+                    
+                    data_regression = [trace1, trace2];
+                    Plotly.newPlot(GRAPH, data_regression, linreg_layout);
+                    
+                    // 코스트 다시 그리기
+                    W = linspace(layout_cost[cur_data]['xaxis']['range'][0], layout_cost[cur_data]['xaxis']['range'][1], 50);
+                    B = linspace(layout_cost[cur_data]['yaxis']['range'][0], layout_cost[cur_data]['yaxis']['range'][1], 50);
+                    Z = draw_cost(W, B, trace2);
+                    trace3.x = W;
+                    trace3.y = B;
+                    trace3.z = Z;
+                    data_contour = [ trace3, trace4 ];
+                    Plotly.newPlot(GRAPH2, data_contour, cost_layout);
+                    
+                    //테이블 데이터 리셋
+                    $('#data-x').children('td').each(function(i) { 
+                        $(this).html(trace2.x[i]);
+                    });
+                    
+                    $('#data-target').children('td').each(function(i) { 
+                        $(this).html(trace2.y[i]);
+                    });
+                    
+                    $('#hypothesis').children('td').each(function(i) { 
+                        hs = (w*trace2.x[i]+b).toFixed(3)
+                        if(hs >= 0) hs = '+'+hs.toString();
+                        else hs = hs.toString();
+                        $(this).html(hs);
+                    });
+                    
+                    $('#indivusual_cost').children('td').each(function(i) { 
+                        $(this).html( Math.pow((w*trace2.x[i]+b)-trace2.y[i], 2).toFixed(3) );
+                    });
+                });
+                
+                
+                $("#view-cost").change(function () {
+                    if ($(this).prop("checked")) {
+                        Plotly.restyle(GRAPH2, 'visible', true,   1);
+                        return;
+                    }
+                    Plotly.restyle(GRAPH2, 'visible', false,   1);
+                });
+            });
+        </script>
+    </body>
+</html>
