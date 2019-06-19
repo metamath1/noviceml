@@ -1,7 +1,9 @@
 <html>
     <head>
         <meta charset="UTF-8"> 
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"-->
+        <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style/style.css"/>
         <link href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css" rel="stylesheet" type="text/css">
         <style>
         #jog_dial_w_wheel {
@@ -10,26 +12,6 @@
         
         #jog_dial_b_wheel {
             background-color: rgb(166,6,40) !important;
-        }
-        
-        .lcd {
-            text-align:center;
-            font-family:"LCDBOLD";
-            font-size:25px;
-        }
-        
-        .lcd-cost {
-            /*text-align:center;*/
-            font-family:"LCDBOLD";
-            font-size:20px;
-            color: rgb(166,6,40);
-            /*border:2px solid #CCC;*/
-        }
-        
-        .d2 {
-            font-family: D2Coding, 'D2 coding' !important;
-            font-size:15px;
-            text-align:right;
         }
         
         .hypothesis {
@@ -45,14 +27,14 @@
         <div class="container" style="border:0px solid #FF0000;">
             <div class="card" style="float:left;margin-top:5px;">
                 <div class="card-body">
-                    <h4 class="card-title lcd-cost">Linear Regression</h4>
+                    <h4 class="card-title">Linear Regression</h4>
                     <div id="graph1" style="float:left;width:500px;height:400px;border:0px solid #FF0000;margin-top:10px;"></div>
                 </div>
             </div>
             
             <div class="card" style="float:left;margin-top:5px;">
                 <div class="card-body">
-                    <h4  class="card-title lcd-cost">Cost Function, <span id="cost_meter" class=""></span></h4>
+                    <h4  class="card-title">Cost Function, <span id="cost_meter" class=""></span></h4>
                     <div id="graph2" style="float:left;width:500px;height:400px;border:0px solid #FF0000;margin-top:10px;margin-left:20px;"></div>
                 </div>
             </div>
@@ -62,7 +44,7 @@
                 <div style="display: inline-block;width:120px;border:0px solid #FF0000;margin-top:55px;vertical-align:top;">
                     <div class="dial">
                         <div id="jog_dial_w"></div>
-                        <p id="jog_dial_w_meter" class="lcd">
+                        <p id="jog_dial_w_meter">
                             w1 : <span id="w_value">0</span>
                         </p>
                     </div>
@@ -71,7 +53,7 @@
                 <div style="display: inline-block;width:120px;border:0px solid #0000FF;margin-top:55px;margin-left:10px;vertical-align:top;">
                     <div class="dial">
                         <div id="jog_dial_b"></div>
-                        <p id="jog_dial_b_meter" class="lcd">
+                        <p id="jog_dial_b_meter">
                             w0 : <span id="b_value">0</span>
                         </p>
                     </div>

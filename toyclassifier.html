@@ -1,0 +1,388 @@
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+        <!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"-->
+        <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style/style.css"/>
+        <link href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css" rel="stylesheet" type="text/css">
+        <style>
+        tr {
+           line-height: 2px;
+           min-height: 2px;
+           height: 2px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container" style="border:0px solid #FF0000;">
+            <div class="row" style="margin-top:10px;">
+                <div class="col">
+                    <div class="card">
+                        <div class="card-body">
+                            <table id="data" class="d2 table" style="margin-bottom: 0px;">
+                            <thead>
+                            <tr>
+                                <th>강아지 이미지</th>
+                                <th>강아지 벡터</th>
+                                <th>고양이 이미지</th>
+                                <th>고양이 벡터</th>
+                            </tr>
+                            </thead>
+                            <tr>
+                                <td rowspan='10'><img id="puppy" src="img/welsh-corgi.jpg" width="160" style="cursor:pointer;"/></td>
+                                <td class="puppy">0</td>
+                                <td rowspan='10'><img id="kitten" src="img/kitten.jpg" width="160" style="cursor:pointer;"/></td>
+                                <td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">1</td><td class="kitten">0</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">0</td><td class="kitten">0</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">0</td><td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">1</td><td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">1</td><td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">1</td><td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">0</td><td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">0</td><td class="kitten">1</td>
+                            </tr>
+                            <tr>
+                                <td class="puppy">0</td><td class="kitten">0</td>
+                            </tr>
+                            </table>
+                        </div>
+                    </div><!--card-->
+                </div><!--col-->
+            </div><!--row-->
+            <div class="row" style="margin-top:10px;">
+                <div class="col-8"><!--표있는 col-->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="container">
+                            <div class="row" style="margin-top:10px;">
+                            <div class="col">
+                                <table id="forward" class="d2 table table-hover">
+                                <thead>
+                                <tr class="table-dark">
+                                    <th scope="row"></th>
+                                    <th scope="col">x</th>
+                                    <th scope="col">w</th>
+                                    <th scope="col">w<sub>i</sub>x<sub>i</sub></th>
+                                    <!--th scope="col">z</th>
+                                    <th scope="col">&sigma;(z)</th>
+                                    <th scope="col">-log(&sigma;)</th-->
+                                </tr>
+                                </thead>
+                                <tr id="data-x1" class="target">
+                                    <th scope="row">x<sub>1</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="0.700"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x2" class="target">
+                                    <th scope="row">x<sub>2</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="-0.820"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x3" class="target">
+                                    <th scope="row">x<sub>3</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="0.740"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x4" class="target">
+                                    <th scope="row">x<sub>4</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="0.540"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x5" class="target">
+                                    <th scope="row">x<sub>5</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="0.260"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x6" class="target">
+                                    <th scope="row">x<sub>6</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="0.990"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x7" class="target">
+                                    <th scope="row">x<sub>7</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="-0.330"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x8" class="target">
+                                    <th scope="row">x<sub>8</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="0.060"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x9" class="target">
+                                    <th scope="row">x<sub>9</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="-0.860"></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="data-x10" class="target">
+                                    <th scope="row">x<sub>10</sub></th>
+                                    <td></td>
+                                    <td><input class="form-control form-control-sm" type="number" step="0.001" placeholder="" value="-0.360"></td>
+                                    <td></td>
+                                </tr>
+                                </table>
+                                </div>
+                                <div class="col">
+                                    <table id="forward2" class="d2 table table-hover">
+                                    <thead>
+                                        <tr class="table-dark">
+                                        <th scope="col">z</th>
+                                        <th scope="col">&sigma;(z)</th>
+                                        <th scope="col">-log(&sigma;)</th-->
+                                        </tr>
+                                    </thead>
+                                    <tr>
+                                        <td id="z">1</td>
+                                        <td id="sigma">1</td>
+                                        <td id="log">1</td>
+                                    </tr>
+                                </table>
+                                <div class="card">
+                                  <div class="card-body">
+                                    
+                                    <h6 class="card-subtitle mb-2 text-muted">z는 w<sub>i</sub>x<sub>i</sub>의 총합</h6>
+                                    <p class="card-text">`z=\sum_{i=1}^{10} w_i x_i`</p>
+                                    <h6 class="card-subtitle mb-2 text-muted">로지스틱 시그모이드 함수</h6>
+                                    <p class="card-text">`\sigma(z)=\frac{1}{1+e^{-z}}`</p>
+                                    <!--a href="#" class="card-link">Card link</a>
+                                    <a href="#" class="card-link">Another link</a-->
+                                  </div>
+                                </div>
+                                <p>
+                                    <div id="sign-board" class="card text-white bg-secondary mb-3" style="max-width: 20rem;">
+                                        <!--div class="card-header">Header</div-->
+                                        <div class="card-body">
+                                            <h4 id="pred" class="card-title"></h4>
+                                            <p class="card-text">강아지 확률:<span id="prob-puppy"></span>, 고양이 확률:<span id="prob-kitten"></span></p>
+                                        </div>
+                                    </div>
+                                </p>
+                                </div>
+                            </div>    
+                            </div>
+                        </div>
+                    </div>  
+                </div><!--col-->
+                <div class="col-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4  class="card-title">손실 함수</h4>
+                            <div id="log-cost" style="width:300px;height:550px;border:0px solid #FF0000;margin-top:10px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div><!--row-->
+        </div>
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script>
+        $( document ).ready(function() {
+            /*
+             * numpy.linspace() 함수의 구현
+             * https://gist.github.com/joates/6584908
+             */
+            var linspace = function(a, b, n) {
+                if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+                if(n<2) { return n===1 ? [a] : []; }
+                var i,ret = Array(n);
+                n--;
+                for(i=n; i>=0; i--) { ret[i] = (i*b+(n-i)*a)/n; }
+                return ret;
+            }
+            
+            var GRAPH = document.getElementById('log-cost');
+            var data = {'puppy':[], 'kitten':[]};
+            var domain = linspace(0.001, 1.2, 100);
+            var logit = 0.0;
+            var likelihood = 0.0;
+            var loss = 0.0;
+            var target = '';
+            var yhat2label = {'puppy':'강아지', 'kitten':'고양이'};
+            
+            // 테이블에서 데이터 가져오기
+            $('#data tr').each(function() {
+                $(this).find('td').each (function() {
+                    if($(this).html()==0 || $(this).html()==1){
+                        // console.log($(this).attr('class'));
+                        data[$(this).attr('class')].push($(this).html());
+                    }
+                });  
+            });
+            
+            // data는 다음과 같은 사전형 
+            // {puppy: Array(10), kitten: Array(10)}
+            //     kitten: (10) ["1", "0", "0", "1", "1", "1", "1", "1", "1", "0"]
+            //     puppy: (10) ["0", "1", "0", "0", "1", "1", "1", "0", "0", "0"]
+            
+            
+            var trace1 = {
+                    x: domain,
+                    y: domain.map(function(x){return -Math.log(x);}),
+                    name: 'cost function',
+                };
+            var trace2 = {
+                    x: [likelihood],
+                    y: [loss],
+                    name: 'data loss',
+                    mode: 'markers',
+                    marker: {
+                        color: 'rgb(231, 71, 66)',
+                        size: 15,
+                        line: {
+                            color: 'rgb(255, 255, 255)',
+                            width: 2    
+                        }
+                    },
+                    type: 'scatter',
+                };
+                
+            var cost = [trace1, trace2];   
+            
+            var layout = {
+                            margin: {
+                                l: 33, r: 20, b: 33, t: 10, pad: 0
+                            },
+                            xaxis: {range: [-0.2, 1.2], title:'x Axis'},   
+                            yaxis: {range: [-0.2, 6],   title:'y Axis'},
+                            legend: {
+                                x: 0.5,
+                                y: 1,
+                                traceorder: 'normal',
+                                bgcolor: '#E2E2E2',
+                                bordercolor: '#E2E2E2',
+                                borderwidth: 2
+                            }                                            
+                        };
+            Plotly.plot(GRAPH, cost, layout);
+            
+            function input_data(s) {
+                for(j=0; j < data[s].length; j++)
+                {
+                    //$('#forward').tr(j).td(0).html()
+                    tr = $('tr', $('#forward')).eq(j+1);
+                    $('td', tr).eq(0).html(data[s][j]);
+                }
+                
+                target = s;
+            }
+            
+            function wixi(){
+                $('#forward tr').each(function (i, row){
+                    if(i > 0) { 
+                        // console.log(i, row);
+                        xi = $('td', $(this)).eq(0).html();
+                        wi = $('td', $(this)).eq(1).children()[0];
+                        wx = xi * $(wi).val();
+                        $('td', $(this)).eq(2).html(wx);
+                        // console.log(xi);
+                    }
+                });  
+            }
+            
+            function z(){
+                logit = 0.0;
+                $('#forward tr').each(function (i, row){
+                    if(i > 0) { 
+                        logit += parseFloat($('td', $(this)).eq(2).html());
+                    }
+                });
+                tr = $('tr', $('#forward2')).eq(1);
+                $('td', tr).eq(0).html(logit.toFixed(3));
+                
+                return logit;
+                
+            }
+            
+            function sigma(logit){
+                tr = $('tr', $('#forward2')).eq(1);
+                likelihood = 1. / (1. + Math.exp(-logit))
+                $('td', tr).eq(1).html(likelihood.toFixed(3));
+                
+                return likelihood;
+            }
+            
+            function pred() {
+                if (likelihood >= 0.5) return 'puppy';
+                else return 'kitten';
+            }
+            
+            function pred_update(){
+                y_hat = pred();
+                
+                
+                $("#pred").html(yhat2label[y_hat]);
+                
+                $("#prob-puppy").html(likelihood.toFixed(3));
+                $("#prob-kitten").html((1.0-likelihood).toFixed(3));
+                
+                if(target == y_hat) $("#sign-board").removeClass('bg-secondary bg-danger bg-success').addClass('bg-success');
+                else $("#sign-board").removeClass('bg-secondary bg-danger bg-success').addClass('bg-danger');
+            }
+            
+            function nll(likelihood){
+                tr = $('tr', $('#forward2')).eq(1);
+                loss = -Math.log(likelihood)
+                $('td', tr).eq(2).html(loss.toFixed(3));
+                
+                console.log(likelihood);
+                console.log(loss);
+                
+                // 로스가 업데이트되었으면 여기서 그래프 업데이트 한다.
+                Plotly.restyle(GRAPH, {x:[[likelihood]], y:[[loss]]}, 1);
+                
+                // 예측도 여기서 한다.
+                pred_update();
+                
+                return loss;
+            }
+            
+            $("#puppy").click(function(){
+                input_data('puppy');
+                
+                wixi();
+                loss = nll(sigma(z()));
+            });
+            
+            $("#kitten").click(function(){
+                input_data('kitten');
+                
+                wixi();
+                loss = nll(sigma(z()));
+            });
+            
+            $("input").on("change keyup paste", function() {
+                // var currentVal = $(this).val();
+                wixi();
+                loss = nll(sigma(z()));
+                
+            });
+        });
+        </script>
+    </body>
+</html>
