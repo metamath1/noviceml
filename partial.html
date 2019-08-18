@@ -1,0 +1,423 @@
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+        <!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"-->
+        <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style/style.css"/>
+        <style>
+            .relative3 {
+              position: relative;
+              top: -80px;
+              left: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container" style="border:0px solid #FF0000;">
+            <div class="row">
+                <div class="col-6" style="border:0px solid #FF0000;margin-top:5px;padding-right: 2px;">
+                    <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;padding-bottom: 6px;">
+                        <div class="card-body">
+                            <h4 class="card-title">Partial derivative</h4>
+                            <div id="graph1" style="height:680px;border:0px solid #0000FF;margin-top:10px;"></div>
+                        </div>
+                    </div>  
+                    <div class="relative3">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check-contour">
+                                <label class="custom-control-label" for="check-contour">Contours</label>
+                            </div>
+                        </div>
+                        <!--div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check-opacity">
+                                <label class="custom-control-label" for="check-opacity">Opacity</label>
+                            </div>
+                        </div-->
+                    </div>
+                </div>
+                <div class="col-6" style="border:0px solid #FF0000;margin-top:5px; padding-left: 2px;">
+                    <div class="row">
+                        <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
+                            <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
+                                <div class="card-body">
+                                    <h4 class="card-title">f(x) at y=<span id="at-y"></span>, df(x)/dx=<span id="dx"></span></h4>
+                                    <div id="graph-dx" style="height:300px;border:0px solid #0000FF;margin-top:10px;"></div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
+                            <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
+                                <div class="card-body">
+                                    <h4 class="card-title">f(y) at x=<span id="at-x"></span>, df(y)/dy=<span id="dy"></span></h4>
+                                    <div id="graph-dy" style="height:300px;border:0px solid #0000FF;margin-top:10px;"></div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="https://cdn.plot.ly/plotly-1.43.2.min.js"></script>
+        <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script>
+            if (!String.prototype.format) {
+              String.prototype.format = function() {
+                var args = arguments;
+                return this.replace(/{(\d+)}/g, function(match, number) { 
+                  return typeof args[number] != 'undefined'
+                    ? args[number]
+                    : match
+                  ;
+                });
+              };
+            }
+            /*
+             * numpy.linspace() 함수의 구현
+             * https://gist.github.com/joates/6584908
+             */
+            var linspace = function(a, b, n) {
+                if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+                if(n<2) { return n===1 ? [a] : []; }
+                var i,ret = Array(n);
+                n--;
+                for(i=n; i>=0; i--) { ret[i] = (i*b+(n-i)*a)/n; }
+                return ret;
+            }
+            
+            var numer_deriv = function(f, x, y, wrt, h=0.01) {
+                
+                if(wrt=='x') {
+                    // x is list
+                    xp = x+(h/2.);
+                    xm = x-(h/2.);
+                    
+                    fp = f(xp, y);
+                    fm = f(xm, y);
+                } else {
+                    // x is list
+                    yp = y+(h/2.);
+                    ym = y-(h/2.);
+                    
+                    fp = f(x, yp);
+                    fm = f(x, ym);
+                }
+                
+                return (fp-fm)/ h;
+            }
+            
+            /*
+             * cost  : function
+             * dcost : derivative function
+             */
+            var cost = function(x1, x2) {
+                /******************************************
+                 * default function
+                 ******************************************/
+                return x1*Math.exp(-(x1*x1)-(x2*x2));
+                
+                /******************************************
+                 * user define function
+                 ******************************************/
+                // return x1*x2
+            }    
+            var dcost = function(x1, x2) {
+                /******************************************
+                 * default function
+                 ******************************************/
+                dx1 = Math.exp(-(x1*x1)-(x2*x2)) + (x1*Math.exp(-(x1*x1)-(x2*x2))*(-2*x1));
+                dx2 = x1*Math.exp(-(x1*x1)-(x2*x2))*(-2*x2);
+                return [dx1, dx2];
+                
+                /******************************************
+                 * user define function
+                 ******************************************/
+                // dx1 = x2;
+                // dx2 = x1;
+                // return [dx1, dx2];
+            }
+            
+            /*
+             * calc. surface function value Z for drawing cost function
+             */
+            var draw_surface = function(X, Y) {
+                var i, j;
+                
+                var grid_size_x = X.length;
+                var grid_size_y = Y.length;
+                
+                var Z = new Array(grid_size_y);
+                
+                for(i = 0; i < grid_size_y; i++) {
+                    Z[i] = new Array(grid_size_x);
+                    
+                    for(j = 0; j < grid_size_x; j++)
+                        Z[i][j] = cost(X[j], Y[i]);
+                }
+                
+                return Z;
+            }
+
+            
+            ////////////////////////////////
+            
+            $( document ).ready(function() {
+                var GRAPH1   = document.getElementById('graph1');
+                var GRAPH_DX = document.getElementById('graph-dx');
+                var GRAPH_DY = document.getElementById('graph-dy');
+                
+                // 함수의 정의역을 설정
+                // 함수가 바뀌면 여기 정의역을 적당히 조정해주면 됨
+                var min_x = -2; var max_x = 2;
+                var min_y = -2; var max_y = 2; 
+                // 그림을 그릴 스탭을 설정 값이 크면 정밀하게 그려지나 속도 느려짐
+                var step = 50;
+                var partial_step = 0.1;
+
+                // domain X, Y 생성
+                var X = linspace(min_x, max_x, step);
+                var Y = linspace(min_y, max_y, step);
+                var Z = draw_surface(X, Y);
+                
+                // 현재 마우스가 위치하는 x,y
+                var cur_x = 0;
+                var cur_y = 0;
+                var run_x = 0;
+                var run_y = 0;
+                var prevent_hoverupdate = false;
+                
+                // GRAPH_DX, GRAPH_DY 그래프 업데이트 함수
+                var update = function(x, y, dxdy='both') {
+                    f_val = cost(x, y);
+                    var fx_val = draw_surface(X, [y]); // X는 외부 변수로 캡쳐되서 사용 가능
+                    var fy_val = draw_surface([x], Y);
+                    var fy_val = fy_val.map( function(value, index) {return value[0];} );
+                    
+                    var grad_x = numer_deriv(cost, x, y, 'x');
+                    var grad_y = numer_deriv(cost, x, y, 'y');
+                    
+                    var delta = 0.2;
+                    var fdx = grad_x * delta;
+                    var xtri = [ [x+delta, f_val+fdx],
+                                    [x-delta, f_val-fdx], 
+                                    [x+delta, f_val-fdx] ];              
+                    
+                    var fdy = grad_y * delta;
+                    var ytri = [ [y+delta, f_val+fdy],
+                                    [y-delta, f_val-fdy], 
+                                    [y+delta, f_val-fdy] ];  
+                    var shapes ={
+                                'xderiv':[{
+                                    type: 'path',
+                                    path: "M {0} {1} L {2} {3} L {4} {5} Z".format(xtri[0][0], xtri[0][1], 
+                                                                                    xtri[1][0], xtri[1][1], 
+                                                                                    xtri[2][0], xtri[2][1]) ,
+                                    fillcolor: 'rgba(166,6,40,0.5)',
+                                    line: {
+                                        color: 'rgb(166,6,40)'
+                                    }
+                                }],
+                                'yderiv':[{
+                                    type: 'path',
+                                    path: "M {0} {1} L {2} {3} L {4} {5} Z".format(ytri[0][0], ytri[0][1], 
+                                                                                    ytri[1][0], ytri[1][1], 
+                                                                                    ytri[2][0], ytri[2][1]) ,
+                                    fillcolor: 'rgba(52,138,189,0.5)',
+                                    line: {
+                                        color: 'rgb(52,138,189)'
+                                    }
+                                }],
+                            }; // 삼각형 두 개 
+                    
+                    if(dxdy == 'x' || dxdy == 'y') {
+                        Plotly.restyle(GRAPH1, { x:[[x]], y:[[y]], z: [[f_val+0.015]], visible:true }, 1);
+                    }
+                    
+
+                    if(dxdy=='both' || dxdy=='x'){
+                        Plotly.relayout(GRAPH_DX, {'shapes':shapes['xderiv']});
+                        Plotly.restyle(GRAPH_DX, {y:[ fx_val[0] ]});
+                        $("#at-x").html(x.toPrecision(3));
+                        $("#dx").html(grad_x.toPrecision(3));
+                    }
+                    
+                    if(dxdy=='both' || dxdy=='y'){
+                        Plotly.relayout(GRAPH_DY, {'shapes':shapes['yderiv']});
+                        Plotly.restyle(GRAPH_DY, {y:[ fy_val ]});
+                        $("#at-y").html(y.toPrecision(3));
+                        $("#dy").html(grad_y.toPrecision(3));
+                    }
+                };
+                
+                var cross_point = {
+                    x:[1.0], y: [1.0], z: [0.2],
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    name: 'x0',
+                    visible:false,
+                    marker: {
+                        size: 3,
+                        color: '#A60628',
+                        line: { color: 'rgba(217, 217, 217, 0.14)', width: 1.},
+                        opacity: 1.
+                    },
+                };
+                
+                var surface = {
+                        z: Z, x: X,  y: Y,
+                        type: 'surface', showscale:false,
+                        colorscale: 'Portland', opacity:1.0, hoverinfo:'x+y+z',
+                        name: 'surface',
+                        contours: { x:{ show:false, highlight:true, color:'#348ABD', width:1,
+                                        highlightcolor:'#348ABD', highlightwidth:5 }, // highlightwidth 버그 있어서 적용안됨
+                                    y:{ show:false, highlight:true, color:'#A60628', width:1,
+                                        highlightcolor:'#A60628', highlightwidth:5 },
+                                    z:{ show:false, highlight:false, }
+                                  }
+                };
+                
+                var Y_const = [1.0];
+                var fx_val = draw_surface(X, Y_const);
+                var fx = { 
+                    x: X,
+                    y: fx_val[0],
+                    name: 'f(x)',
+                    type: 'scatter',
+                    marker: {color:'#A60628'}
+                };
+                
+                var X_const = [1.0];
+                var fy_val = draw_surface(X_const, Y);
+                // fy_val은 [[숫자],[숫자],[]] 이런식이라 하나로 모아줘야 한다.
+                fy_val = fy_val.map( function(value, index) {return value[0];} );
+                var fy = { 
+                    x: Y,
+                    y: fy_val,
+                    name: 'f(y)',
+                    type: 'scatter',
+                    marker: {color:'#348ABD'}
+                };
+                
+                var layouts  = {
+                        '3d-square' : {
+                            hovermode:'closest',
+                            spikedistance:-1,
+                            margin: {
+                                l: 33, r: 20, b: 33, t: 20, pad: 0
+                            },
+                            scene:{
+                                xaxis:{showspikes:false},
+                                yaxis:{showspikes:false},
+                                zaxis:{showspikes:false,  range: [-0.45, 0.45],},
+                                aspectratio:{x:1, y:1, z:0.8},      
+                            }
+                        },
+                        '2dx' : {
+                            // 2차원 그래프의 높이 범위를 여기서 설정
+                            // 함수에 맞게 적당한 범위를 적어준다.
+                            yaxis: {range:[-.5, .5]},
+                            margin: {
+                                l: 33, r: 20, b: 33, t: 20, pad: 0
+                            },
+                        },
+                        '2dy' : {
+                            // 2차원 그래프의 높이 범위를 여기서 설정
+                            // 함수에 맞게 적당한 범위를 적어준다.
+                            yaxis: {range:[-.5, .5]},
+                            margin: {
+                                l: 33, r: 20, b: 33, t: 20, pad: 0
+                            },
+                        }
+                };
+                
+                Plotly.plot(GRAPH1,   [ surface, cross_point], layouts['3d-square']);
+                Plotly.plot(GRAPH_DX, [fx,]     , layouts['2dx']);
+                Plotly.plot(GRAPH_DY, [fy,]     , layouts['2dy']);
+                
+                
+                // 곡면의 윤곽선을 조정하는 이벤트 핸들러
+                $("#check-contour").change(function () {
+                    if ($(this).prop("checked")) {
+                        var update = {
+                            'contours.x.show':true,
+                            'contours.y.show':true
+                        };
+                        Plotly.restyle(GRAPH1, update);
+                        return;
+                    }
+                    var update = {
+                            'contours.x.show':false,
+                            'contours.y.show':false
+                        };
+                    Plotly.restyle(GRAPH1, update);
+                });
+                
+                // 곡면의 투명도를 조정하는 이벤트 핸들러
+                $("#check-opacity").change(function () {
+                    if ($(this).prop("checked")) {
+                        Plotly.restyle(GRAPH1, 'opacity', 0.8, 0);
+                        return;
+                    }
+                    Plotly.restyle(GRAPH1, 'opacity', 1.0, 0);
+                });
+                
+                GRAPH1.on('plotly_hover', function(data){
+                    // 현재 마우스 포인트의 좌표
+                    X_const = [data['points'][0]['x']]; //Array [ 1.0954773869346734 ]
+                    Y_const = [data['points'][0]['y']];
+                    
+                    if(!prevent_hoverupdate) {
+                        cur_x = X_const[0];
+                        cur_y = Y_const[0];
+                        
+                        run_x = cur_x;
+                        run_y = cur_y;
+                        
+                        update(cur_x, cur_y);
+                    }
+                }); //GRAPH1.on('plotly_hover', function(data){
+                
+                document.addEventListener("mousemove", function(e){
+                    //console.log('mouse move');
+                    if(prevent_hoverupdate == true) {
+                        Plotly.restyle(GRAPH1, { visible:false }, 1);
+                        prevent_hoverupdate = false;
+                    }
+                });
+
+                // https://github.com/plotly/plotly.js/issues/562
+                document.addEventListener("keydown", function(e){
+                    var key = e.key;
+                    
+                    // w: 87, s: 83, a: 65, d: 68
+                    switch (key) {
+                        case 'w': // +y
+                            prevent_hoverupdate = true;
+                            run_y += partial_step;
+                            update(cur_x, run_y, 'y');
+                            break;
+                        case 's': // -y
+                            prevent_hoverupdate = true;
+                            run_y -= partial_step;
+                            update(cur_x, run_y, 'y');
+                            break;
+                        case 'a': // -x
+                            prevent_hoverupdate = true;
+                            run_x -= partial_step;
+                            update(run_x, cur_y, 'x');
+                            break;
+                        case 'd': // +x
+                            prevent_hoverupdate = true;
+                            run_x += partial_step;
+                            update(run_x, cur_y, 'x');
+                            break;
+                    }
+                }); //document.addEventListener("keydown", function(e){
+            }); //$( document ).ready(function() {
+        </script>
+    </body>
+</html>
