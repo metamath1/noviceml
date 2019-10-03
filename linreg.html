@@ -7,11 +7,19 @@
         <link href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css" rel="stylesheet" type="text/css">
         <style>
         #jog_dial_w_wheel {
-            background-color: rgb(52,138,189) !important;
+            background-color: rgb(100,100,100) !important;
+        }
+
+        #jog_dial_w_knob {
+            background-color: rgb(100,100,100) !important;
         }
         
         #jog_dial_b_wheel {
-            background-color: rgb(166,6,40) !important;
+            background-color: rgb(100,100,100) !important;
+        }
+
+        #jog_dial_b_knob {
+            background-color: rgb(100,100,100) !important;
         }
         
         .hypothesis {
@@ -24,85 +32,94 @@
         </style>
     </head>
     <body>
-        <div class="container" style="border:0px solid #FF0000;">
-            <div class="card" style="float:left;margin-top:5px;">
-                <div class="card-body">
-                    <h4 class="card-title">Linear Regression</h4>
-                    <div id="graph1" style="float:left;width:500px;height:400px;border:0px solid #FF0000;margin-top:10px;"></div>
-                </div>
-            </div>
-            
-            <div class="card" style="float:left;margin-top:5px;">
-                <div class="card-body">
-                    <h4  class="card-title">Cost Function, <span id="cost_meter" class=""></span></h4>
-                    <div id="graph2" style="float:left;width:500px;height:400px;border:0px solid #FF0000;margin-top:10px;margin-left:20px;"></div>
-                </div>
-            </div>
-        </div>    
-        <div class="container" style="border:0px solid #FF0000;margin-top:10px;">   
-            <div style="display:inline-block;border:0px solid #FF0000;vertical-align:top;margin-right:20px;">
-                <div style="display: inline-block;width:120px;border:0px solid #FF0000;margin-top:55px;vertical-align:top;">
-                    <div class="dial">
-                        <div id="jog_dial_w"></div>
-                        <p id="jog_dial_w_meter">
-                            w1 : <span id="w_value">0</span>
-                        </p>
+        <div class="container" style="margin-top:20px;border:0px solid #FF0000;">
+            <div class="row">
+                <div class="col-6" style="border:0px solid #00FF00;">
+                    <div class="card" style="float:left;margin-top:5px;">
+                        <div class="card-body" style="border:0px solid #FF0000;">
+                            <h4 class="card-title">Linear Regression</h4>
+                            <div id="graph1" style="float:left;width:490px;height:400px;border:0px solid #FF0000;margin-top:10px;"></div>
+                        </div>
                     </div>
                 </div>
-                    
-                <div style="display: inline-block;width:120px;border:0px solid #0000FF;margin-top:55px;margin-left:10px;vertical-align:top;">
-                    <div class="dial">
-                        <div id="jog_dial_b"></div>
-                        <p id="jog_dial_b_meter">
-                            w0 : <span id="b_value">0</span>
-                        </p>
-                    </div>
-                </div>
-                
-                <div style="border:0px solid #0000FF;margin-top:10px;margin-left:5px;margin-right:5px;">
-                    <div class="form-group">
-                        <select class="custom-select">
-                            <option value="line">Linear</option>
-                            <option value="sin">Sin</option>
-                        </select>
-                  </div>
-                </div>
-                
-                <div style="border:0px solid #0000FF;margin-top:10px;margin-left:5px;margin-right:5px;">
-                    <div class="form-group">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="view-cost">
-                            <label class="custom-control-label" for="view-cost">View cost</label>
+                <div class="col-6" style="border:0px solid #00FF00;">
+                    <div class="card" style="float:left;margin-top:5px;">
+                        <div class="card-body" style="border:0px solid #FF0000;">
+                            <h4  class="card-title">Cost Function, <span id="cost_meter" class=""></span></h4>
+                            <div id="graph2" style="float:left;width:490px;height:400px;border:0px solid #FF0000;margin-top:10px;margin-left:20px;"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div style="display:inline-block;border:0px solid #0000FF;margin-top:13px;margin-left:5px;">
-                <table id="data-table" class="d2 table table-hover">
-                    <thead>
-                    <tr class="table-dark">
-                        <th scope="row"></th>
-                        <th scope="col">D1</th><th scope="col">D2</th>
-                        <th scope="col">D3</th><th scope="col">D4</th>
-                        <th scope="col">D5</th><th scope="col">D6</th>
-                        <th scope="col">D7</th><th scope="col">D8</th>
-                        <th scope="col">D9</th><th scope="col">D10</th>
-                    </tr>
-                    </thead>
-                    <tr id="data-x" class="target">
-                        <th scope="row">x</th>
-                    </tr>
-                    <tr id="data-target" class="target">
-                        <th scope="row">y</th>
-                    </tr>
-                    <tr id="hypothesis" class="hypothesis">
-                        <th scope="row">h</th>
-                    </tr>
-                    <tr id="indivusual_cost">
-                        <th scope="row">(h-y)^2</th>
-                    </tr>
-                </table>
+        </div>    
+        <div class="container" style="border:0px solid #FF0000;margin-top:10px;">   
+            <div class="row" style="padding-left:10px;">
+                <div class="col-12">
+                    <div style="display:inline-block;border:0px solid #FF0000;vertical-align:top;margin-right:20px;">
+                        <div style="display: inline-block;width:120px;border:0px solid #FF0000;margin-top:55px;vertical-align:top;">
+                            <div class="dial">
+                                <div id="jog_dial_w"></div>
+                                <p id="jog_dial_w_meter">
+                                    w<sub>1</sub> : <span id="w_value">0</span>
+                                </p>
+                            </div>
+                        </div>
+                            
+                        <div style="display: inline-block;width:120px;border:0px solid #0000FF;margin-top:55px;margin-left:10px;vertical-align:top;">
+                            <div class="dial">
+                                <div id="jog_dial_b"></div>
+                                <p id="jog_dial_b_meter">
+                                    w<sub>0</sub> : <span id="b_value">0</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="border:0px solid #0000FF;margin-top:20px;margin-left:5px;margin-right:5px;">
+                            <div class="form-group">
+                                <select class="custom-select">
+                                    <option value="line">Linear</option>
+                                    <option value="sin">Sin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="border:0px solid #0000FF;margin-top:10px;margin-left:5px;margin-right:5px;">
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="view-cost">
+                                    <label class="custom-control-label" for="view-cost">View cost</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="float:right;display:inline-block;border:1px solid #CCCCCC;margin-top:13px;margin-left:5px;">
+                        <table id="data-table" class="d2 table table-hover" style="margin-bottom: 0px;">
+                            <thead>
+                            <tr class="table-dark">
+                                <th scope="row"></th>
+                                <th scope="col">D1</th><th scope="col">D2</th>
+                                <th scope="col">D3</th><th scope="col">D4</th>
+                                <th scope="col">D5</th><th scope="col">D6</th>
+                                <th scope="col">D7</th><th scope="col">D8</th>
+                                <th scope="col">D9</th><th scope="col">D10</th>
+                            </tr>
+                            </thead>
+                            <tr id="data-x" class="target">
+                                <th scope="row">x</th>
+                            </tr>
+                            <tr id="data-target" class="target">
+                                <th scope="row">y</th>
+                            </tr>
+                            <tr id="hypothesis" class="hypothesis">
+                                <th scope="row">h</th>
+                            </tr>
+                            <tr id="indivusual_cost">
+                                <th scope="row">(h-y)^2</th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
         <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -154,7 +171,7 @@
             }
                 
             $( document ).ready(function() {
-                var GRAPH = document.getElementById('graph1');
+                var GRAPH  = document.getElementById('graph1');
                 var GRAPH2 = document.getElementById('graph2');
                 var domain = {'line' : linspace(-1, 1, 100), 'sin' : linspace(-0.5, 1.5, 100)}
                 
@@ -335,7 +352,7 @@
                         w = Math.round(evt.target.rotation)/500.;
                         b = parseFloat($('#b_value').text());
                         
-                        $('#jog_dial_w_meter').html('w1 : <span id="w_value">'+w+'</span>');
+                        $('#jog_dial_w_meter').html('w<sub>1</sub> : <span id="w_value">'+w+'</span>');
                         $('#cost_meter').html('COST : <span id="cost_value">'+cost(w, b, trace2.x, trace2.y).toFixed(3)+'</span>');
                         
                         h = domain[cur_data].map( function(x){return (w*x)+b;} );
@@ -360,7 +377,7 @@
                         b = Math.round(evt.target.rotation)/500.;
                         w = parseFloat($('#w_value').text());
                  
-                        $('#jog_dial_b_meter').html('w0 : <span id="b_value">'+b+'</span>');
+                        $('#jog_dial_b_meter').html('w<sub>0</sub> : <span id="b_value">'+b+'</span>');
                         $('#cost_meter').html('COST : <span id="cost_value">'+cost(w, b, trace2.x, trace2.y).toFixed(3)+'</span>');
                         
                         h = domain[cur_data].map(function(x){return (w*x)+b;} );
