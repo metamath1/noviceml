@@ -1,0 +1,344 @@
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+        <!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"-->
+        <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style/style.css"/>
+        <link href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css" rel="stylesheet" type="text/css">
+        <style>
+        .lcd {
+            text-align:center;
+            font-family:"LCDBOLD";
+            font-size:25px;
+        }
+        
+        .lcd-cost {
+            /*text-align:center;*/
+            font-family:"LCDBOLD";
+            font-size:20px;
+            color: rgb(166,6,40);
+            /*border:2px solid #CCC;*/
+        }
+        
+        .d2 {
+            font-family: D2Coding, 'D2 coding' !important;
+            font-size:15px;
+            text-align:right;
+        }
+        
+        .hypothesis {
+            color: rgb(52,138,189);
+        }
+        
+        .target{
+            color: rgb(213,94,0);
+        }
+        .relative2 {
+          position: relative;
+          top: -800px;
+          left: 120px;
+          
+        }
+        .relative3 {
+          position: relative;
+          top: -350px;
+          left: 740px;
+          width:150px;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container" style="border:0px solid #FF0000;">
+            <div class="row">
+                <div class="col-10 offset-1" style="border:0px solid #FF0000;margin-top:5px;">
+                    <div class="card" style="border:0px solid #FF0000;margin-top:5px;">
+                        <div class="card-body">
+                            <h4 class="card-title lcd-cost">Multivariable-Scalar Fucntion</h4>
+                            <div id="graph1" style="height:800px;border:0px solid #00FF00;margin-top:10px;"></div>
+                        </div>
+                    </div>  
+                    <div class="relative2" style="height:60px;width:300px;">
+                        <p id="contour" style="color:#0072b2">
+                            `-\frac{x_1 + x_2}{2+\cos(x_1)\sin(x_2)} + 12 = f(x_1, x_2)`
+                        </p> 
+                    </div>
+                    <div class="relative3">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check-opacity">
+                                <label class="custom-control-label" for="check-opacity">Opacity</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check-zcontour">
+                                <label class="custom-control-label" for="check-zcontour">Off Z contours</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-form-label" for="inputDefault">Gradient Position</label>
+                            <div class="row">
+                                <div class="col">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="x" id="grad_x">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="y" id="grad_y">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                 <div class="form-group">
+                                    <button type="button" class="btn btn-primary btn-sm">Draw gradient</button>
+                                 </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--div class="col-4" style="border:0px solid #FF0000;margin-top:5px;">
+                    <div class="card" style="border:0px solid #FF0000;margin-top:5px;">
+                        <div class="card-body">
+                            <h4 class="card-title lcd-cost">Equation</h4>
+                            <p id="contour" style="text-align:center;color:#0072b2">
+                              `-\frac{x_1 + x_2}{2+\cos(x_1)\sin(x_2)} + 12 = f(x_1, x_2)`
+                            </p> 
+                        </div>
+                    </div>
+                    
+                </div-->
+            </div>
+        </div>    
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script type="text/javascript" src="marchingsquares.min.js"></script>
+        <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script>
+            /*
+             * numpy.linspace() 함수의 구현
+             * https://gist.github.com/joates/6584908
+             */
+            var linspace = function(a, b, n) {
+                if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+                if(n<2) { return n===1 ? [a] : []; }
+                var i,ret = Array(n);
+                n--;
+                for(i=n; i>=0; i--) { ret[i] = (i*b+(n-i)*a)/n; }
+                return ret;
+            }
+            
+            /*
+             * surface function  
+             * cost  : function
+             * dcost : derivative function
+             */
+            var cost = function(x1, x2) {
+                return -(x1+x2) / (2+Math.cos(x1)*Math.sin(x2)) + 12;
+            }    
+            var dcost = function(x1, x2) {
+                dx1 = - (2+Math.cos(x1)*Math.sin(x2)+(x1+x2)*(Math.sin(x2)*Math.sin(x1))) / (2+Math.cos(x1)*Math.sin(x2))**2;
+                dx2 = - (2+Math.cos(x1)*Math.sin(x2)-(x1+x2)*(Math.cos(x2)*Math.cos(x1))) / (2+Math.cos(x1)*Math.sin(x2))**2;
+                return [dx1, dx2];
+            }
+             
+            /*
+             * calc. surface function value Z for drawing cost function
+             */
+            var draw_surface = function(X, Y) {
+                var i, j;
+                
+                var grid_size = X.length;
+                var Z = new Array(grid_size);
+                
+                for(i = 0; i < grid_size; i++) {
+                    Z[i] = new Array(grid_size);
+                    
+                    for(j = 0; j < grid_size; j++)
+                        Z[i][j] = cost(X[j], Y[i]);
+                }
+                
+                return Z;
+            }
+            
+            $( document ).ready(function() {
+                var GRAPH1 = document.getElementById('graph1');
+                //var GRAPH2 = document.getElementById('graph2');
+                
+                var max_x = 5; var max_y = 10; var step = 50;
+                var X = linspace(0, max_x, step);
+                var Y = linspace(0, max_y, step);
+                var Z = draw_surface(X, Y);
+                
+                var onhover_handler = function(data){
+                    var infotext = data.points[0].z.toPrecision(3);
+                    
+                    $("#contour").html("`-\\frac{x_1 + x_2}{2+\\cos(x_1)\\sin(x_2)} + 12 = " + infotext + "`" );
+                    
+                    //eq. re-rendering
+                    MathJax.Hub.Typeset();
+                }
+                
+                var offhover_handler = function(data){
+                    $("#contour").html("`-\\frac{x_1 + x_2}{2+\\cos(x_1)\\sin(x_2)} + 12 = f(x_1, x_2)`" );
+                    
+                    //eq. re-rendering
+                    MathJax.Hub.Typeset();
+                }
+            
+                // surface 데이터
+                var surface = {
+                        z: Z, x: X,  y: Y,
+                        type: 'surface', showscale:false,
+                        colorscale: 'Portland', opacity:1.0, hoverinfo:'x+y+z',
+                        name: 'surface',
+                        contours: { x:{ show:false, highlight:false, },
+                                    y:{ show:false, highlight:false, },
+                                    z:{ show:true,  highlight:true, color:'#a60628', 
+                                        highlightcolor:'#0072b2', highlightwidth:5, 
+                                        project:{z:true}
+                                    }
+                                  },
+                        
+                }
+                
+                //calc. derivative for init. gradient cone.
+                var fval  = cost(0, 0);
+                var dfval = dcost(0, 0);
+                
+                var cone = {
+                        x:[0], y:[0], z:[fval], u:[dfval[0]], v:[dfval[1]], w:[0],
+                        name: 'gradient', colorscale: 'Portland',
+                        type:'cone', showscale:false, sizemode: "absolute", anchor:'tail',
+                }
+                
+                var data = [ surface, cone ];
+                
+                var layouts  = {
+                                '3d-square' : {
+                                    hovermode:'closest',
+                                    spikedistance:-1,
+                                    margin: {
+                                        l: 33, r: 20, b: 33, t: 20, pad: 0
+                                    },
+                                    scene:{
+                                        xaxis:{showspikes:false},
+                                        yaxis:{showspikes:false},
+                                        zaxis:{showspikes:true, spikecolor:'#0072b2', spikesides:false},
+                                    }
+                                }, 
+                            }
+                
+                Plotly.plot(GRAPH1, data, layouts['3d-square']);
+                
+                // 호버 이벤트 핸들러를 등록한다.
+                // https://plot.ly/javascript/hover-events/
+                GRAPH1.on('plotly_hover', onhover_handler).on('plotly_unhover', offhover_handler);
+                
+                $(".btn").click(function() {
+                    grad_x = parseFloat($('#grad_x').val());
+                    grad_y = parseFloat($('#grad_y').val());
+                    
+                    if( !grad_x || !grad_y) {
+                        alert("enter position");
+                        return;
+                    }
+                    
+                    fval = cost(grad_x, grad_y);
+                    dfval = dcost(grad_x, grad_y);
+                    console.log(fval);
+                    
+                    //cone 정보를 새로 업데이트 하고
+                    cone.x = [grad_x];
+                    cone.y = [grad_y];
+                    cone.z = [fval];
+                    cone.u = [dfval[0]];
+                    cone.v = [dfval[1]];
+                    
+                    // 마칭 스퀘어 수행
+                    var isoline = MarchingSquaresJS.isoLines(Z, fval);
+                    
+                    // 0번 칸투어부터 순환하면서 트레이스로 만들어 준다.
+                    // MarchingSquaresJS는 는 전체 스퀘어의 최외각 바운더리도 닫힌 칸투어로
+                    // 0번에 저정하여 되돌림
+                    var added_trace = []
+                    for(i = 0; i < isoline.length; i++) {
+                        //console.log(isoline[i]);
+                        var contour_x = isoline[i].map(function(value, index) { return value[0]; });
+                        var contour_y = isoline[i].map(function(value, index) { return value[1]; });
+                        var contour_z = Array(contour_x.length);
+                        
+                        // contour_x, contour_y를 리매핑해야함.
+                        // MarchingSquaresJS는 [0,step-1]x[0,step-1]로 정의되는 정규좌표계에 대한 결과를
+                        // 돌려주기 때문에 원래 함수 정의된 R^2구간으로 선형 매팽해야함.
+                        contour_x = contour_x.map(function(value, index) {return (max_x/(step-1))*value} );
+                        contour_y = contour_y.map(function(value, index) {return (max_y/(step-1))*value} );
+                        contour_z.fill(fval)
+                        
+                        // 공간에 그려질 컨투어
+                        var contour_trace = {
+                            x:contour_x, y: contour_y, z: contour_z,
+                            mode: 'lines',
+                            type: 'scatter3d', 
+                            name: 'isoline'+i,
+                            line: {width:4, color:'#A60628'}
+                        };
+                        
+                        // 바닥에 프로젝션되는 컨투어
+                        // var contour_trace_proj = {
+                        //     x:contour_x, y: contour_y, z: Array(contour_x.length).fill(0.0),
+                        //     mode: 'lines',
+                        //     type: 'scatter3d', 
+                        //     name: 'isoline_proj'+i,
+                        //     line: {width:4, color:'#A60628'}
+                        // };
+                        
+                        // 마칭스퀘어로 만들어진 컨투어를 리스트에 다 적재
+                        // added_trace.push(contour_trace, contour_trace_proj);
+                        added_trace.push(contour_trace, );
+                    }
+                    
+                    //앞에서 두개(곡면과 콘) 빼고 다 지워냄
+                    if(GRAPH1.data.length > 2) {
+                        var del_trace_idx = [];
+                        
+                        num_remain_trace = GRAPH1.data.length - 2;
+                        
+                        for(var k = 1; k < num_remain_trace+1; k++) {
+                            del_trace_idx.push(-k);
+                        }
+                        
+                        del_trace_idx.reverse();
+                        Plotly.deleteTraces(GRAPH1, del_trace_idx);
+                    }
+                    
+                    // 위에서 만들어놓은 컨투어를 트레이스에 추가해 줌.
+                    Plotly.addTraces(GRAPH1, added_trace);
+                });
+                
+                
+                // 곡면의 투명도를 조정하는 이벤트 핸들러
+                $("#check-opacity").change(function () {
+                    if ($(this).prop("checked")) {
+                        Plotly.restyle(GRAPH1, 'opacity', 0.8,   0);
+                        return;
+                    }
+                    Plotly.restyle(GRAPH1, 'opacity', 1.0,   0);
+                });
+                
+                // 곡면의 z contour를 조정하는 이벤트 핸들러
+                // firefox에서는 z contour 그리는 버그 있음.
+                $("#check-zcontour").change(function () {
+                    if ($(this).prop("checked")) {
+                        // surface.contours.z.show = false; 이런식으로 할 수도 있음.
+                        Plotly.restyle(GRAPH1, 'contours.z.show', false,   0);
+                        return;
+                    }
+                    Plotly.restyle(GRAPH1, 'contours.z.show', true,   0);
+                });
+            });
+        </script>
+    </body>
+</html>
