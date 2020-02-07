@@ -350,8 +350,8 @@
                 loss = -Math.log(likelihood)
                 $('td', tr).eq(2).html(loss.toFixed(3));
                 
-                console.log(likelihood);
-                console.log(loss);
+                // console.log(likelihood);
+                // console.log(loss);
                 
                 // 로스가 업데이트되었으면 여기서 그래프 업데이트 한다.
                 Plotly.restyle(GRAPH, {x:[[likelihood]], y:[[loss]]}, 1);
@@ -367,6 +367,11 @@
                 
                 wixi();
                 loss = nll(sigma(z()));
+                
+                // 그림 테두리
+                $("#puppy").css("border",  "3px solid #CCCCCC");
+                $("#kitten").css("border", "0px solid #CCCCCC");
+                
             });
             
             $("#kitten").click(function(){
@@ -374,6 +379,9 @@
                 
                 wixi();
                 loss = nll(sigma(z()));
+                
+                $("#puppy").css("border",  "0px solid #CCCCCC");
+                $("#kitten").css("border", "3px solid #CCCCCC");
             });
             
             $("input").on("change keyup paste", function() {
