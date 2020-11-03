@@ -2,7 +2,7 @@
 
 ---
 
-<img src="https://github.com/WegraLee/deep-learning-from-scratch/blob/master/" width="480">
+<img src="https://github.com/metamath1/noviceml/blob/master/front.jpg" width="480">
 
 ---
 
