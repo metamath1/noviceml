@@ -24,10 +24,10 @@
 |CHAP_08.ipynb      | 8장 예제 프로그램과 그래프 그리는 코드 |
 |CHAP_09.ipynb      | 9장 예제 프로그램과 그래프 그리는 코드 |
 |CHAP_10.ipynb      | 10장 예제 프로그램과 그래프 그리는 코드 |
-|linreg.html        | 1장 손으로 해보는 선형회귀 웹앱 |
-|toyclassifier.html | 3장 여러가지 함수를 활용한 초간단 분류기 웹앱 |
-|partial.html       | 5장 편미분 데모용 웹앱 |
-|linearity.html     | 10장 선형회귀의 선형성 확인 웹앱 |
+|linreg.html        | 1장 손으로 해보는 선형회귀 웹앱, 바로보기: https://metamath1.github.io/noviceml/linreg.html |
+|toyclassifier.html | 3장 여러가지 함수를 활용한 초간단 분류기 웹앱, 바로보기:https://metamath1.github.io/noviceml/toyclassifier.html  |
+|partial.html       | 5장 편미분 데모용 웹앱, 바로보기: https://metamath1.github.io/noviceml/partial.html |
+|linearity.html     | 10장 선형회귀의 선형성 확인 웹앱, 바로보기: https://metamath1.github.io/noviceml/linearity.html |
 
 ## 요구사항
 소스 코드는 구글 코랩에서 테스트되었으며 코랩을 통해 바로 실행할 수 있습니다.

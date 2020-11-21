@@ -13,13 +13,13 @@
             }
         </style>
     </head>
-    <body>
+    <body style="background-color:#F9F9F9;">
         <div class="container" style="border:0px solid #FF0000;padding-top:10px;">
             <div class="row">
                 <div class="col-6" style="border:0px solid #FF0000;margin-top:5px;">
                     <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
+                        <div class="card-header">`f(x, x^2) = ax + bx^2 + c`</div>
                         <div class="card-body">
-                            <h4 class="card-title lcd-cost">`f(x, x^2) = ax + bx^2 + c`</h4>
                             <div id="graph1" style="height:700px;border:0px solid #0000FF;margin-top:10px;"></div>
                         </div>
                     </div> 
@@ -36,8 +36,8 @@
                     <div class="row">
                         <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
                             <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
+                                <div class="card-header">`y = bx^2 + ax + c`</div>
                                 <div class="card-body">
-                                    <h4 class="card-title lcd-cost">`y = bx^2 + ax + c`</h4>
                                     <div id="graph-dx" style="height:375px;border:0px solid #0000FF;margin-top:10px;"></div>
                                 </div>
                             </div> 
@@ -48,20 +48,20 @@
 							<form class="customizing">
 								<div class="card" style="border:1px solid #CCCCCC;margin-top:13px;">
 									<div class="card-body">
-										<h5 class="card-title lcd-cost">a = <span id="coef_a_value"></span></h5>
-										<input type="range" min="-100" max="100" value="0" class="slider" id="coef_a" style="width:100%;">
+										<h5 class="card-title">a = <span id="coef_a_value"></span></h5>
+										<input type="range" min="-100" max="100" value="0" class="custom-range" id="coef_a" style="width:100%;">
 									</div>
 								</div> 
 								<div class="card" style="border:1px solid #CCCCCC;margin-top:10px;">
 									<div class="card-body">
-										<h5 class="card-title lcd-cost">b = <span id="coef_b_value"></span></h5>
-										<input type="range" min="-100" max="100" value="0" class="slider" id="coef_b" style="width:100%;">
+										<h5 class="card-title">b = <span id="coef_b_value"></span></h5>
+										<input type="range" min="-100" max="100" value="0" class="custom-range" id="coef_b" style="width:100%;">
 									</div>
 								</div> 
 								<div class="card" style="border:1px solid #CCCCCC;margin-top:10px;">
 									<div class="card-body">
-										<h5 class="card-title lcd-cost">c = <span id="coef_c_value"></span></h5>
-										<input type="range" min="-200" max="200" value="0" class="slider" id="coef_c" style="width:100%;">
+										<h5 class="card-title">c = <span id="coef_c_value"></span></h5>
+										<input type="range" min="-200" max="200" value="0" class="custom-range" id="coef_c" style="width:100%;">
 									</div>
 								</div> 
 							</form>
