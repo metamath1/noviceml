@@ -130,7 +130,7 @@
             var GRAPH3 = document.getElementById('graph3');
             
             var mu_C1 = 3.;
-            var variance_C1 = .1;
+            var variance_C1 = 0.5;
             var mu_C2 = (3./100.)*parseFloat($('#mu_C2').val()) + 2.;
             var variance_C2 = 1.;
             
@@ -263,7 +263,7 @@
                 autosize: false,
                 width: 400,
                 height: 300,
-                xaxis: {range:[2,8], title:'θ'},
+                xaxis: {range:[2,9], title:'θ'},
                 yaxis: {title:'p(X|θ)'},
                 margin: {
                     l: 40, r: 5, b: 30, t: 5, pad: 0
@@ -275,7 +275,7 @@
                 autosize: false,
                 width: 400,
                 height: 300,
-                xaxis: {range:[2,8], title:'θ'},
+                xaxis: {range:[2,9], title:'θ'},
                 yaxis: {title:'p(X|θ)p(θ)'},
                 margin: {
                     l: 40, r: 5, b: 30, t: 5, pad: 0
