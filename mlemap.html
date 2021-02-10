@@ -1,0 +1,359 @@
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+        <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style/style.css"/>
+        <link href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css" rel="stylesheet" type="text/css">
+        <style>
+        /* https://stackoverflow.com/questions/7525977/how-to-write-fraction-value-using-html */
+        .frac {
+            display: inline-block;
+            position: relative;
+            vertical-align: middle;
+            letter-spacing: 0.001em;
+            text-align: center;
+        }
+        .frac > span {
+            display: block;
+            padding: 0.1em;
+        }
+        .frac span.bottom {
+            border-top: thin solid black;
+        }
+        .frac span.symbol {
+            display: none;
+        } 
+        </style>
+    </head>
+    <body style="background-color:#F9F9F9;">
+        <div class="container" style="border:0px solid #FF0000;">
+            <!-- 가우시안 그래프 -->
+            <div class="row">
+                <div class="card" style="float:left;margin-top:5px;">
+                    <div class="card-body">
+                        <div id="graph1" style="float:left;width:1000px;height:400px;border:0px solid #FF0000;margin-top:10px;"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- 세타 슬리이더 -->
+            <div class="row">
+                <div class="card" style="margin-top:15px;margin-left:210px;">
+                    <div class="card-body" style="padding-top: 5px;padding-bottom: 5px;">
+                        <h5 class="card-title">θ=<span id="mu_C2_label"></span></h5>
+                        <!--div min="0" max="100" value="50" class="slider" id="mu_C2"-->
+                        <form class="customizing">
+                            <input type="range" min="0" max="200" value="100" class="custom-range" id="mu_C2" style="width:410px;">
+                        </form>
+                    </div>
+                </div> 
+            </div>
+            <!-- 가능도, 사후확률 그래프 -->
+            <div class="row">
+                <div class="col-6" style="padding-left:20px;border:0px solid #FF0000;">
+                    <div class="card" style="margin-top:10px;">
+                        <div class="card-header">Likelihood(θ) = p(X|θ): <span style="padding-top:15px;" id="Likelihood"></span></div>
+                        <div class="card-body">
+                            <div id="graph2" style="border:0px solid #FF0000;margin-top:10px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6" style="padding-left:20px;border:0px solid #FF0000;">
+                    <div class="card" style="margin-top:10px;">
+                        <div class="card-header">p(θ|X)p(X) = p(X|θ)p(θ):  <span style="padding-top:15px;" id="posterior"></span></div>
+                        <div class="card-body">
+                            <div id="graph3" style="border:0px solid #FF0000;margin-top:10px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!--container-->
+
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <!--script src="https://cdn.jsdelivr.net/gh/nicolaspanel/numjs@0.15.1/dist/numjs.min.js"></script-->
+        <script>
+        /*
+         * numpy.linspace() 함수의 구현
+         * https://gist.github.com/joates/6584908
+         */
+        var linspace = function(a, b, n) {
+            if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+            if(n<2) { return n===1 ? [a] : []; }
+            var i,ret = Array(n);
+            n--;
+            for(i=n; i>=0; i--) { ret[i] = (i*b+(n-i)*a)/n; }
+            return ret;
+        }
+        
+        
+        function gaussian_(x, mu, variance) {
+            sigma = Math.sqrt(variance);
+            
+            return (1. / sigma*Math.sqrt(2*Math.PI)) * Math.exp( (-1/2)*(Math.pow((x-mu)/sigma, 2)) );
+        }
+        
+        /*
+         * https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
+         */
+        function randn_bm(mean, sigma) {
+            var u = 0, v = 0;
+            while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+            while(v === 0) v = Math.random();
+            return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v ) * sigma + mean;
+        }
+
+        /*
+         * https://stackoverflow.com/questions/3730510/javascript-sort-array-and-return-an-array-of-indicies-that-indicates-the-positi
+         */
+         var make_sort_index = function(test){
+            var test_with_index = [];
+            for (var i in test) {
+                test_with_index.push([test[i], i]);
+            }
+            test_with_index.sort(function(left, right) {
+            return left[0] < right[0] ? -1 : 1;
+            });
+            var indexes = [];
+            test = [];
+            for (var j in test_with_index) {
+                test.push(test_with_index[j][0]);
+                indexes.push(test_with_index[j][1]);
+            }
+
+            return indexes;
+        }
+        
+        $( document ).ready(function() {
+            var GRAPH1 = document.getElementById('graph1');
+            var GRAPH2 = document.getElementById('graph2');
+            var GRAPH3 = document.getElementById('graph3');
+            
+            var mu_C1 = 3.;
+            var variance_C1 = 1.;
+            var mu_C2 = (3./100.)*parseFloat($('#mu_C2').val()) + 2.;
+            var variance_C2 = 1.3;
+            
+            var x = linspace(0, 12, 200);
+            
+            // 두 가우시안의 prior를 1로 해서 별개의 확률분포로 만든다.
+            var p_C1 = 1.;
+            var p_C2 = 1.;
+
+            var gaussian = function(x, mu, variance, prior) { 
+                return x.map(function(value, index) { return prior*gaussian_(value, mu, variance); }); 
+            }
+            
+            var thetas = [4.0, 5.0, 6.0, 7.0];
+            var rand = Math.random();
+            //rand = 0.78;
+            rand *= thetas.length; //(5)
+            //rand = 3.9
+            rand = Math.floor(rand);
+            //rand = 3
+            console.log(thetas[rand]);
+
+            var sample_dist = {'theta':thetas[rand], 'var':1.0}
+            var X = new Array(10).fill(0).map(v => randn_bm(sample_dist['theta'], sample_dist['var']))
+            
+            
+            var prior = { 
+                x: x,
+                y: gaussian(x, mu_C1, variance_C1, p_C1),
+                name: 'p(θ)',
+                type: 'scatter',
+                marker: {color:'#348ABD'},
+            };
+            
+            var p_x_bar_theta = { 
+                x: x,
+                y: gaussian(x, mu_C2, variance_C2, p_C2),
+                name: 'p(x|θ)',
+                type: 'scatter',
+                marker: {color:'rgb(204, 81, 101)'},
+                fill: 'tozeroy'
+            };
+            
+            var samples = {
+                x: X,
+                y: new Array(10).fill(0),
+                type: 'scatter',
+                mode: 'markers',
+                marker: { color: 'rgb(204, 81, 101)', size: 10,
+                          line: { color: 'rgb(255, 255, 255)', width: 2 }
+                        },
+                name: 'samples',
+            };
+            var data = [ prior, p_x_bar_theta, samples ];
+            
+            
+            var mle_x = [];
+            var mle_y = [];
+            var mle_xy = {
+                x: mle_x,
+                y: mle_y,
+                // mode: 'markers',
+                // type: 'scatter',
+                marker: {
+                    color: 'rgb(70, 181, 211)',
+                    size: 4,
+                }
+            };
+            var mle_x_c = [];
+            var mle_y_c = [];
+            var mle_xy_c = {
+                x: mle_x_c,
+                y: mle_y_c,
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    color: 'rgb(32, 114, 136)',
+                    size: 15,
+                    line: {
+                    color: 'rgb(255, 255, 255)',
+                    width: 3
+                    }
+                }
+            };
+            var data_mle = [ mle_xy, mle_xy_c ];
+            
+            var map_x = [];
+            var map_y = [];
+            var map_xy = {
+                x: map_x,
+                y: map_y,
+                // mode: 'markers',
+                // type: 'scatter',
+                marker: {
+                    color: 'rgb(235, 164, 50)',
+                    size: 4,
+                }
+            };
+            var map_x_c = [];
+            var map_y_c = [];
+            var map_xy_c = {
+                x: map_x_c,
+                y: map_y_c,
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    color: 'rgb(219, 73, 76)',
+                    size: 15,
+                    line: {
+                    color: 'rgb(255, 255, 255)',
+                    width: 3
+                    }
+                }
+            };
+            var data_map = [ map_xy, map_xy_c ];
+            
+            
+            // https://community.plot.ly/t/moving-shapes-with-mouse-in-plotly-js-reactjs/11457/7
+            // https://codepen.io/fingerpori/pen/GGLWoz
+            // https://plot.ly/javascript/plotlyjs-events/
+            var layout = { 
+                autosize: true,
+                title: 'Maximum Likelihood Estimation and Maximum a Posterior',
+                xaxis: {title:'x'},
+                yaxis: {title:'Prob. density'},
+            };
+
+
+            var layout_mle = {
+                autosize: false,
+                width: 400,
+                height: 300,
+                xaxis: {range:[1,10], title:'θ'},
+                yaxis: {title:'p(X|θ)'},
+                margin: {
+                    l: 40, r: 5, b: 30, t: 5, pad: 0
+                },
+                showlegend: false
+            };
+
+            var layout_map = {
+                autosize: false,
+                width: 400,
+                height: 300,
+                xaxis: {range:[1,10], title:'θ'},
+                yaxis: {title:'p(X|θ)p(θ)'},
+                margin: {
+                    l: 40, r: 5, b: 30, t: 5, pad: 0
+                },
+                showlegend: false
+            };
+
+            Plotly.newPlot(GRAPH1, data, layout, {editable: true});
+            Plotly.newPlot(GRAPH2, data_mle, layout_mle);
+            Plotly.newPlot(GRAPH3, data_map, layout_map);
+
+            $('#mu_C2').on("change mousemove", function() {
+                mu_C2 = (3./100.)*parseFloat($(this).val()) + 2.;
+                
+                $('#mu_C2_label').html(mu_C2.toFixed(3));
+                
+                update = { x: [ x, x ], 
+                           y: [ gaussian(x, mu_C1, variance_C1, p_C1), // prior
+                                gaussian(x, mu_C2, variance_C2, p_C2), // p(x|theta)
+                              ] 
+                        }
+                
+                Plotly.restyle(GRAPH1, update, [0,1]);
+
+                // calc. likelihood 
+                // p(X|theta) =  p(x_1|theta)*p(x_2|theta)*...*p(x_N|theta)
+                Ls = X.map(x =>  gaussian([x], mu_C2, variance_C2, p_C2));
+                const reducer = (accumulator, currentValue) => accumulator * currentValue;
+                L = Ls.reduce(reducer);
+
+                prior = gaussian([mu_C2], mu_C1, variance_C1, p_C1);
+                posterior = L*prior;
+
+                $('#Likelihood').html(L.toFixed(6)); 
+                $('#posterior').html(posterior.toFixed(6)); 
+
+                mle_x.push(mu_C2);
+                mle_y.push(L);
+                mle_x_c = [ mu_C2 ];
+                mle_y_c = [ L ];
+
+                sort_idx = make_sort_index(mle_x);
+                ordered_mle_x = [];
+                ordered_mle_y = [];
+
+                sort_idx.forEach(function(e){
+                    ordered_mle_x.push(mle_x[e]);
+                    ordered_mle_y.push(mle_y[e]);
+                })
+                
+                update = {
+                    x: [ ordered_mle_x, mle_x_c ], 
+                    y: [ ordered_mle_y, mle_y_c ] 
+                }
+                Plotly.restyle(GRAPH2, update, [0,1]);
+
+                map_x.push(mu_C2);
+                map_y.push(posterior);
+                map_x_c = [ mu_C2 ];
+                map_y_c = [ posterior ];
+                
+                sort_idx = make_sort_index(map_x);
+                ordered_map_x = [];
+                ordered_map_y = [];
+
+                sort_idx.forEach(function(e){
+                    ordered_map_x.push(map_x[e]);
+                    ordered_map_y.push(map_y[e]);
+                })
+
+                update = { 
+                    x: [ ordered_map_x, map_x_c ], 
+                    y: [ ordered_map_y, map_y_c ] 
+                }
+                Plotly.restyle(GRAPH3, update, [0, 1]);
+
+            });
+        });
+        </script>
+    </body>
+</html>
