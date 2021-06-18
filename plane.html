@@ -1,0 +1,306 @@
+<html>
+    <head>
+        <meta charset="UTF-8"> 
+		<!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"-->
+        <link rel="stylesheet" type="text/css" href="style/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style/style.css"/>
+        <style>
+            .relative3 {
+              position: relative;
+              top: -120px;
+              left: 60px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container" style="border:0px solid #FF0000;">
+            <div class="row">
+                <div class="col-6" style="border:0px solid #FF0000;margin-top:5px;">
+                    <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
+                        <div class="card-body">
+                            <h4 class="card-title lcd-cost">f(x, y) = ax + by + c</h4>
+                            <div id="graph1" style="height:680px;border:0px solid #0000FF;margin-top:10px;"></div>
+                        </div>
+                    </div> 
+                    <div class="relative3">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check-opacity">
+                                <label class="custom-control-label" for="check-opacity">Opacity</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6" style="border:0px solid #FF0000;margin-top:5px;">
+                    <div class="row">
+                        <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
+                            <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
+                                <div class="card-body">
+                                    <h4 class="card-title lcd-cost">ax + by + c = 0</h4>
+                                    <div id="graph-dx" style="height:400px;border:0px solid #0000FF;margin-top:10px;"></div>
+                                </div>
+                            </div> 
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
+							<form class="customizing">
+								<div class="card" style="border:0px solid #FF0000;margin-top:5px;">
+									<div class="card-body">
+										<h4 class="card-title lcd-cost">a = <span id="coef_a_value"></span></h4>
+										<input type="range" min="-100" max="100" value="0" class="slider" id="coef_a" style="width:100%;">
+									</div>
+								</div> 
+								<div class="card" style="border:0px solid #FF0000;margin-top:5px;">
+									<div class="card-body">
+										<h4 class="card-title lcd-cost">b = <span id="coef_b_value"></span></h4>
+										<input type="range" min="-100" max="100" value="0" class="slider" id="coef_b" style="width:100%;">
+									</div>
+								</div> 
+								<div class="card" style="border:0px solid #FF0000;margin-top:5px;">
+									<div class="card-body">
+										<h4 class="card-title lcd-cost">c = <span id="coef_c_value"></span></h4>
+										<input type="range" min="-200" max="200" value="0" class="slider" id="coef_c" style="width:100%;">
+									</div>
+								</div> 
+							</form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="https://cdn.plot.ly/plotly-1.43.2.min.js"></script>
+        <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+		
+        <script>
+            if (!String.prototype.format) {
+              String.prototype.format = function() {
+                var args = arguments;
+                return this.replace(/{(\d+)}/g, function(match, number) { 
+                  return typeof args[number] != 'undefined'
+                    ? args[number]
+                    : match
+                  ;
+                });
+              };
+            }
+            /*
+             * numpy.linspace() 함수의 구현
+             * https://gist.github.com/joates/6584908
+             */
+            var linspace = function(a, b, n) {
+                if(typeof n === "undefined") n = Math.max(Math.round(b-a)+1,1);
+                if(n<2) { return n===1 ? [a] : []; }
+                var i,ret = Array(n);
+                n--;
+                for(i=n; i>=0; i--) { ret[i] = (i*b+(n-i)*a)/n; }
+                return ret;
+            }
+            
+            /*
+             * cost  : function
+             * 
+             */
+            var cost = function(x1, x2, params = [2, 1, 0]) {
+                /******************************************
+                 * default function
+                 ******************************************/
+                var a = params[0];
+                var b = params[1];
+                var c = params[2];
+                
+                return a*x1 + b*x2 + c;
+                
+                /******************************************
+                 * user define function
+                 ******************************************/
+                // return x1*x2
+            }    
+            
+            /*
+             * calc. surface function value Z for drawing cost function
+             */
+            var draw_surface = function(f, X, Y, params) {
+                var i, j;
+                //console.log(params);
+                
+                var grid_size_x = X.length;
+                var grid_size_y = Y.length;
+                
+                var Z = new Array(grid_size_y);
+                
+                for(i = 0; i < grid_size_y; i++) {
+                    Z[i] = new Array(grid_size_x);
+                    
+                    for(j = 0; j < grid_size_x; j++)
+                        Z[i][j] = f(X[j], Y[i], params);
+                }
+                
+                return Z;
+            }
+            
+            
+            $( document ).ready(function() {
+                var GRAPH1 = document.getElementById('graph1');
+                var GRAPH_DX = document.getElementById('graph-dx');
+                
+                // 함수의 정의역을 설정
+                // 함수가 바뀌면 여기 정의역을 적당히 조정해주면 됨
+                var min_x = -5; var max_x = 5;
+                var min_y = -4; var max_y = 4; 
+                // 그림을 그릴 스탭을 설정 값이 크면 정밀하게 그려지나 속도 느려짐
+                var step = 3;
+                
+                var scale = 50;
+                var a = parseFloat($('#coef_a').val()) / scale;
+                var b = parseFloat($('#coef_b').val()) / scale;
+                var c = parseFloat($('#coef_c').val()) / scale;
+             
+                var X = linspace(min_x, max_x, step);
+                var Y = linspace(min_y, max_y, step);
+                var Z = draw_surface(cost, X, Y, [a, b, c]);
+                
+                var surface = {
+                        type: 'surface',
+                        z: Z, x: X,  y: Y,
+                        showscale:false,
+                        colorscale: 'Portland', opacity:1.0, hoverinfo:'x+y+z',
+                        name: 'surface',
+                        contours: { x:{ show:false, highlight:true, color:'#348ABD', width:1,
+                                        highlightcolor:'#348ABD', highlightwidth:5},
+                                    y:{ show:false, highlight:true, color:'#A60628', width:1,
+                                        highlightcolor:'#A60628', highlightwidth:5},
+                                    z:{ show:false, highlight:false, }
+                                  }
+                };
+                
+                z_zero = X.map( function(value, index) {return 0;} );
+                
+                var xyplane = {
+                        type: 'surface', 
+                        z: Z, x: X,  y: Y,
+                        showscale:false,
+                        opacity:0.7, hoverinfo:'x+y+z',
+                        name: 'surface',
+                        contours: { x:{ show:false, highlight:true, color:'#348ABD', width:1,
+                                        highlightcolor:'#348ABD', highlightwidth:5},
+                                    y:{ show:false, highlight:true, color:'#A60628', width:1,
+                                        highlightcolor:'#A60628', highlightwidth:5},
+                                    z:{ show:false, highlight:false, }
+                                  }
+                };
+                
+                
+				y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+				var line_3d = {
+					    type: 'scatter3d',
+					    mode: 'lines',
+					    x: X, y: y, z: z_zero,
+                        opacity: 1,
+					    line: {
+						    width: 6,
+						    color: '#A60628',
+						    reversescale: false
+					    }
+				};
+  			
+                var line = { 
+                    x: X,
+                    y: y,
+                    name: 'f(x)',
+                    mode: 'lines',
+                    marker: {color:'#A60628'},
+                };
+                
+				
+
+                var layouts  = {
+                        '3d-square' : {
+                            hovermode:'closest',
+                            spikedistance:-1,
+                            margin: {
+                                l: 33, r: 20, b: 33, t: 20, pad: 0
+                            },
+                            scene:{
+                                xaxis:{showspikes:false, range: [-4, 4], title:'x Axis'},
+                                yaxis:{showspikes:false, range: [-4, 4], title:'y Axis'},
+                                zaxis:{showspikes:false, range: [-4, 4], title:'z Axis'},
+                                aspectratio:{x:1, y:1, z:1},      
+                            },
+                        },
+                        '2dx' : {
+                            // 2차원 그래프의 높이 범위를 여기서 설정
+                            // 함수에 맞게 적당한 범위를 적어준다.
+                            xaxis: {range: [-5, 5], title:'x Axis'},   
+                            yaxis: {range: [-5, 5], title:'y Axis'},
+                            margin: {
+                                l: 33, r: 20, b: 33, t: 20, pad: 0
+                            },
+                        },
+                };
+                
+                Plotly.plot(GRAPH1,   [surface, line_3d, xyplane],   layouts['3d-square']);
+                Plotly.plot(GRAPH_DX, [line,]     , layouts['2dx']);
+
+				// 곡면의 투명도를 조정하는 이벤트 핸들러
+                $("#check-opacity").change(function () {
+                    if ($(this).prop("checked")) {
+                        Plotly.restyle(GRAPH1, 'opacity', 0.8, 0);
+                        return;
+                    }
+                    Plotly.restyle(GRAPH1, 'opacity', 1.0, 0);
+                }); 
+				
+				$('#coef_a').on("change mousemove", function() {
+					a = parseFloat($(this).val()) / scale;
+                    $('#coef_a_value').html(a);
+                    
+                    // redraw
+                    // surface, line_3d, xyplane
+                    Z = draw_surface(cost, X, Y, [a, b, c]);
+                    y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+                    
+                    var update = {y: [Y, y], z: [Z, z_zero]}
+                    Plotly.restyle(GRAPH1, update, [0,1]);
+                    
+                    update = { y: [y] }
+                    Plotly.restyle(GRAPH_DX, update, 0);
+                    
+				});
+				
+				$('#coef_b').on("change mousemove", function() {
+					b = parseFloat($(this).val()) / scale;
+                    $('#coef_b_value').html(b);
+                    
+                    // redraw
+                    Z = draw_surface(cost, X, Y, [a, b, c]);
+                    y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+                    
+                    var update = {y: [Y, y], z: [Z, z_zero]}
+                    Plotly.restyle(GRAPH1, update, [0,1]);
+                    
+                    update = { y: [y] }
+                    Plotly.restyle(GRAPH_DX, update, 0);
+				});
+				
+				$('#coef_c').on("change mousemove", function() {
+					c = parseFloat($(this).val()) / scale;
+                    $('#coef_c_value').html(c);
+                    
+                    // redraw
+                    Z = draw_surface(cost, X, Y, [a, b, c]);
+                    y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+                    
+                    var update = {y: [Y, y], z: [Z, z_zero]}
+                    Plotly.restyle(GRAPH1, update, [0,1]);
+                    
+                    update = { y: [y] }
+                    Plotly.restyle(GRAPH_DX, update, 0);
+				});
+                
+                
+            });
+        </script>
+    </body>
+</html>
