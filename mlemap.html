@@ -39,7 +39,7 @@
             <div class="row">
                 <div class="card" style="margin-top:15px;margin-left:210px;">
                     <div class="card-body" style="padding-top: 5px;padding-bottom: 5px;">
-                        <h5 class="card-title">θ=<span id="mu_C2_label"></span></h5>
+                        <h5 class="card-title">μ=<span id="mu_C2_label"></span></h5>
                         <!--div min="0" max="100" value="50" class="slider" id="mu_C2"-->
                         <form class="customizing">
                             <input type="range" min="0" max="200" value="100" class="custom-range" id="mu_C2" style="width:410px;">
@@ -51,7 +51,7 @@
             <div class="row">
                 <div class="col-6" style="padding-left:20px;border:0px solid #FF0000;">
                     <div class="card" style="margin-top:10px;">
-                        <div class="card-header">Likelihood(θ) = p(X|θ): <span style="padding-top:15px;" id="Likelihood"></span></div>
+                        <div class="card-header">Likelihood(μ;X) = p(X|μ): <span style="padding-top:15px;" id="Likelihood"></span></div>
                         <div class="card-body">
                             <div id="graph2" style="border:0px solid #FF0000;margin-top:10px;"></div>
                         </div>
@@ -59,7 +59,7 @@
                 </div>
                 <div class="col-6" style="padding-left:20px;border:0px solid #FF0000;">
                     <div class="card" style="margin-top:10px;">
-                        <div class="card-header">p(θ|X)p(X) = p(X|θ)p(θ):  <span style="padding-top:15px;" id="posterior"></span></div>
+                        <div class="card-header">p(μ|X)p(X) = p(X|μ)p(μ):  <span style="padding-top:15px;" id="posterior"></span></div>
                         <div class="card-body">
                             <div id="graph3" style="border:0px solid #FF0000;margin-top:10px;"></div>
                         </div>
@@ -160,7 +160,7 @@
             var prior = { 
                 x: x,
                 y: gaussian(x, mu_C1, variance_C1, p_C1),
-                name: 'p(θ)',
+                name: 'p(μ)',
                 type: 'scatter',
                 marker: {color:'#348ABD'},
             };
@@ -168,7 +168,7 @@
             var p_x_bar_theta = { 
                 x: x,
                 y: gaussian(x, mu_C2, variance_C2, p_C2),
-                name: 'p(x|θ)',
+                name: 'p(x|μ)',
                 type: 'scatter',
                 marker: {color:'rgb(204, 81, 101)'},
                 fill: 'tozeroy'
@@ -263,8 +263,8 @@
                 autosize: false,
                 width: 400,
                 height: 300,
-                xaxis: {range:[2,9], title:'θ'},
-                yaxis: {title:'p(X|θ)'},
+                xaxis: {range:[2,9], title:'μ'},
+                yaxis: {title:'p(X|μ)'},
                 margin: {
                     l: 40, r: 5, b: 30, t: 5, pad: 0
                 },
@@ -275,8 +275,8 @@
                 autosize: false,
                 width: 400,
                 height: 300,
-                xaxis: {range:[2,9], title:'θ'},
-                yaxis: {title:'p(X|θ)p(θ)'},
+                xaxis: {range:[2,9], title:'μ'},
+                yaxis: {title:'p(X|μ)p(μ)'},
                 margin: {
                     l: 40, r: 5, b: 30, t: 5, pad: 0
                 },
