@@ -51,7 +51,7 @@
             <div class="row">
                 <div class="col-6" style="padding-left:20px;border:0px solid #FF0000;">
                     <div class="card" style="margin-top:10px;">
-                        <div class="card-header">Likelihood(μ;X) = p(X|μ): <span style="padding-top:15px;" id="Likelihood"></span></div>
+                        <div class="card-header">Likelihood(μ;𝒟) = p(𝒟|μ): <span style="padding-top:15px;" id="Likelihood"></span></div>
                         <div class="card-body">
                             <div id="graph2" style="border:0px solid #FF0000;margin-top:10px;"></div>
                         </div>
@@ -59,7 +59,7 @@
                 </div>
                 <div class="col-6" style="padding-left:20px;border:0px solid #FF0000;">
                     <div class="card" style="margin-top:10px;">
-                        <div class="card-header">p(μ|X)p(X) = p(X|μ)p(μ):  <span style="padding-top:15px;" id="posterior"></span></div>
+                        <div class="card-header">p(𝒟|μ)p(μ):  <span style="padding-top:15px;" id="posterior"></span></div>
                         <div class="card-body">
                             <div id="graph3" style="border:0px solid #FF0000;margin-top:10px;"></div>
                         </div>
@@ -168,7 +168,7 @@
             var p_x_bar_theta = { 
                 x: x,
                 y: gaussian(x, mu_C2, variance_C2, p_C2),
-                name: 'p(x|μ)',
+                name: 'p(X|μ)',
                 type: 'scatter',
                 marker: {color:'rgb(204, 81, 101)'},
                 fill: 'tozeroy'
@@ -254,7 +254,7 @@
             var layout = { 
                 autosize: true,
                 title: 'Maximum Likelihood Estimation and Maximum a Posterior',
-                xaxis: {title:'x'},
+                xaxis: {title:'X'},
                 yaxis: {title:'Prob. density'},
             };
 
@@ -264,7 +264,7 @@
                 width: 400,
                 height: 300,
                 xaxis: {range:[2,9], title:'μ'},
-                yaxis: {title:'p(X|μ)'},
+                yaxis: {title:'p(𝒟|μ)'},
                 margin: {
                     l: 40, r: 5, b: 30, t: 5, pad: 0
                 },
@@ -276,7 +276,7 @@
                 width: 400,
                 height: 300,
                 xaxis: {range:[2,9], title:'μ'},
-                yaxis: {title:'p(X|μ)p(μ)'},
+                yaxis: {title:'p(𝒟|μ)p(μ)'},
                 margin: {
                     l: 40, r: 5, b: 30, t: 5, pad: 0
                 },
