@@ -3,3 +3,15 @@
     font-size:15px;
     text-align:right;
 }
+
+.func-title {
+    font-family: D2Coding, 'D2 coding' !important;
+    font-size:30px;
+    text-align:left;
+}
+
+.func-title-small {
+    font-family: D2Coding, 'D2 coding' !important;
+    font-size:25px;
+    text-align:left;
+}

@@ -18,7 +18,7 @@
                 <div class="col-6" style="border:0px solid #FF0000;margin-top:5px;">
                     <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
                         <div class="card-body">
-                            <h4 class="card-title lcd-cost">f(x, y) = ax + by + c</h4>
+                            <h4 class="card-title func-title">f(x,y) = ax + by + c</h4>
                             <div id="graph1" style="height:680px;border:0px solid #0000FF;margin-top:10px;"></div>
                         </div>
                     </div> 
@@ -28,6 +28,10 @@
                                 <input type="checkbox" class="custom-control-input" id="check-opacity">
                                 <label class="custom-control-label" for="check-opacity">Opacity</label>
                             </div>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="check-samples">
+                                <label class="custom-control-label" for="check-samples">Sample</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -36,7 +40,7 @@
                         <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
                             <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
                                 <div class="card-body">
-                                    <h4 class="card-title lcd-cost">ax + by + c = 0</h4>
+                                    <h4 class="card-title func-title">ax + by + c = 0</h4>
                                     <div id="graph-dx" style="height:400px;border:0px solid #0000FF;margin-top:10px;"></div>
                                 </div>
                             </div> 
@@ -47,19 +51,19 @@
 							<form class="customizing">
 								<div class="card" style="border:0px solid #FF0000;margin-top:5px;">
 									<div class="card-body">
-										<h4 class="card-title lcd-cost">a = <span id="coef_a_value"></span></h4>
+										<h4 class="card-title func-title-small">a = <span id="coef_a_value"></span></h4>
 										<input type="range" min="-100" max="100" value="0" class="slider" id="coef_a" style="width:100%;">
 									</div>
 								</div> 
 								<div class="card" style="border:0px solid #FF0000;margin-top:5px;">
 									<div class="card-body">
-										<h4 class="card-title lcd-cost">b = <span id="coef_b_value"></span></h4>
+										<h4 class="card-title func-title-small">b = <span id="coef_b_value"></span></h4>
 										<input type="range" min="-100" max="100" value="0" class="slider" id="coef_b" style="width:100%;">
 									</div>
 								</div> 
 								<div class="card" style="border:0px solid #FF0000;margin-top:5px;">
 									<div class="card-body">
-										<h4 class="card-title lcd-cost">c = <span id="coef_c_value"></span></h4>
+										<h4 class="card-title func-title-small">c = <span id="coef_c_value"></span></h4>
 										<input type="range" min="-200" max="200" value="0" class="slider" id="coef_c" style="width:100%;">
 									</div>
 								</div> 
@@ -149,8 +153,13 @@
                 // 함수가 바뀌면 여기 정의역을 적당히 조정해주면 됨
                 var min_x = -5; var max_x = 5;
                 var min_y = -4; var max_y = 4; 
+                
+                // 샘플 (버튼에 따라 보였다 안보였다 하게 하기)
+                var sample_pos = [1,-1]
+                var sample_neg = [2,-2]
+
                 // 그림을 그릴 스탭을 설정 값이 크면 정밀하게 그려지나 속도 느려짐
-                var step = 3;
+                var step = 2;
                 
                 var scale = 50;
                 var a = parseFloat($('#coef_a').val()) / scale;
@@ -200,18 +209,125 @@
                         opacity: 1,
 					    line: {
 						    width: 6,
-						    color: '#A60628',
+						    color: '#313552',
 						    reversescale: false
 					    }
 				};
+                // https://colorhunt.co/
+                var positive_3d = {
+                    x: [sample_pos[0]],
+                    y: [sample_pos[1]],
+                    z: [0],
+                    name: 'pos',
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    visible: false,
+                    marker: {
+                        size: 5, 
+                        color: '#B8405E',
+                        line: {
+                            color: 'rgb(0, 0, 0)', 
+                            width: 1
+                        },
+                    }
+                }
+                var negative_3d = {
+                    x: [sample_neg[0]],
+                    y: [sample_neg[1]],
+                    z: [0],
+                    name: 'pos',
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    visible: false,
+                    marker: {
+                        size: 5, 
+                        color: '#2EB086',
+                        line: {
+                            color: 'rgb(0, 0, 0)', 
+                            width: 1
+                        },
+                    }
+                }
+                
+                var f_pos_z = a*1 + b*(-1) + c
+                var pos_to_the_plane = {
+                    x: [sample_pos[0], sample_pos[0]],
+                    y: [sample_pos[1], sample_pos[1]],
+                    z: [0, f_pos_z],
+                    name: 'pos',
+                    mode: 'lines',
+                    type: 'scatter3d',
+                    visible: false,
+                    line: {
+                        width: 4,
+                        color: '#313552',
+                    },
+                    marker: {
+                        size: 5, 
+                        color: '#B8405E',
+                    }
+                }
+
+                var f_neg_z = a*2 + b*(-2) + c
+                var neg_to_the_plane = {
+                    x: [sample_neg[0], sample_neg[0]],
+                    y: [sample_neg[1], sample_neg[1]],
+                    z: [0, f_neg_z],
+                    name: 'neg',
+                    mode: 'lines',
+                    type: 'scatter3d',
+                    visible: false,
+                    line: {
+                        width: 4,
+                        color: '#313552',
+                    },
+                    marker: {
+                        size: 5, 
+                        color: '#B8405E',
+                    }
+                }
   			
                 var line = { 
                     x: X,
                     y: y,
                     name: 'f(x)',
                     mode: 'lines',
-                    marker: {color:'#A60628'},
+                    marker: {color:'#313552'},
                 };
+
+                var positive_2d = {
+                    x: [sample_pos[0]],
+                    y: [sample_pos[1]],
+                    name: 'pos',
+                    mode: 'markers',
+                    type: 'scatter',
+                    visible: false,
+                    marker: {
+                        size: 12, 
+                        color: '#B8405E',
+                        line: {
+                            color: 'rgb(0, 0, 0)', 
+                            width: 1
+                        },
+                    }
+                }
+
+                var negative_2d = {
+                    x: [sample_neg[0]],
+                    y: [sample_neg[1]],
+                    name: 'neg',
+                    mode: 'markers',
+                    type: 'scatter',
+                    visible: false,
+                    marker: {
+                        size: 12, 
+                        color: '#2EB086',
+                        line: {
+                            color: 'rgb(0, 0, 0)', 
+                            width: 1
+                        },
+                    }
+                }
                 
 				
 
@@ -228,6 +344,7 @@
                                 zaxis:{showspikes:false, range: [-4, 4], title:'z Axis'},
                                 aspectratio:{x:1, y:1, z:1},      
                             },
+                            showlegend: false
                         },
                         '2dx' : {
                             // 2차원 그래프의 높이 범위를 여기서 설정
@@ -240,8 +357,10 @@
                         },
                 };
                 
-                Plotly.plot(GRAPH1,   [surface, line_3d, xyplane],   layouts['3d-square']);
-                Plotly.plot(GRAPH_DX, [line,]     , layouts['2dx']);
+                Plotly.plot(GRAPH1,   [surface, line_3d, pos_to_the_plane, neg_to_the_plane, 
+                                       xyplane, positive_3d, negative_3d, ],   
+                            layouts['3d-square']);
+                Plotly.plot(GRAPH_DX, [line, positive_2d, negative_2d], layouts['2dx']);
 
 				// 곡면의 투명도를 조정하는 이벤트 핸들러
                 $("#check-opacity").change(function () {
@@ -252,6 +371,30 @@
                     Plotly.restyle(GRAPH1, 'opacity', 1.0, 0);
                 }); 
 				
+                $("#check-samples").change(function () {
+                    if ($(this).prop("checked")) {
+                        console.log('show')
+                        var update = {
+                            visible: [true, true, true, true], 
+                        }
+                        Plotly.restyle(GRAPH1, update, [2, 3, 5, 6]);
+                        
+                        update = {
+                            visible: [true, true]
+                        }
+                        Plotly.restyle(GRAPH_DX, update, [1, 2]);
+                        return;
+                    }
+                    var update = {
+                        visible: [false, false, false, false], 
+                    }
+                    Plotly.restyle(GRAPH1, update, [2, 3, 5, 6]);
+                    update = {
+                            visible: [false, false]
+                    }
+                    Plotly.restyle(GRAPH_DX, update, [1, 2]);
+                }); 
+
 				$('#coef_a').on("change mousemove", function() {
 					a = parseFloat($(this).val()) / scale;
                     $('#coef_a_value').html(a);
@@ -261,8 +404,15 @@
                     Z = draw_surface(cost, X, Y, [a, b, c]);
                     y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
                     
-                    var update = {y: [Y, y], z: [Z, z_zero]}
-                    Plotly.restyle(GRAPH1, update, [0,1]);
+                    // to_the_plane
+                    f_pos_z = a*sample_pos[0] + b*sample_pos[1] + c
+                    f_neg_z = a*sample_neg[0] + b*sample_neg[1] + c
+
+                    var update = {
+                                    y: [Y, y, [sample_pos[1],sample_pos[1]], [sample_neg[1],sample_neg[1]]], 
+                                    z: [Z, z_zero, [0,f_pos_z], [0,f_neg_z]]
+                                }
+                    Plotly.restyle(GRAPH1, update, [0, 1, 2, 3]);
                     
                     update = { y: [y] }
                     Plotly.restyle(GRAPH_DX, update, 0);
@@ -276,9 +426,16 @@
                     // redraw
                     Z = draw_surface(cost, X, Y, [a, b, c]);
                     y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
-                    
-                    var update = {y: [Y, y], z: [Z, z_zero]}
-                    Plotly.restyle(GRAPH1, update, [0,1]);
+
+                    // to_the_plane
+                    f_pos_z = a*1 + b*(-1) + c
+                    f_neg_z = a*2 + b*(-2) + c
+
+                    var update = {
+                                    y: [Y, y, [sample_pos[1],sample_pos[1]], [sample_neg[1],sample_neg[1]]], 
+                                    z: [Z, z_zero, [0,f_pos_z], [0,f_neg_z]]
+                                }
+                    Plotly.restyle(GRAPH1, update, [0,1,2,3]);
                     
                     update = { y: [y] }
                     Plotly.restyle(GRAPH_DX, update, 0);
@@ -292,14 +449,19 @@
                     Z = draw_surface(cost, X, Y, [a, b, c]);
                     y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
                     
-                    var update = {y: [Y, y], z: [Z, z_zero]}
-                    Plotly.restyle(GRAPH1, update, [0,1]);
+                    // to_the_plane
+                    f_pos_z = a*1 + b*(-1) + c
+                    f_neg_z = a*2 + b*(-2) + c
+
+                    var update = {
+                                    y: [Y, y, [sample_pos[1],sample_pos[1]], [sample_neg[1],sample_neg[1]]], 
+                                    z: [Z, z_zero, [0,f_pos_z], [0,f_neg_z]]
+                                }
+                    Plotly.restyle(GRAPH1, update, [0,1,2,3]);
                     
                     update = { y: [y] }
                     Plotly.restyle(GRAPH_DX, update, 0);
 				});
-                
-                
             });
         </script>
     </body>
