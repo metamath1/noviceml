@@ -25,14 +25,19 @@
                     </div> 
                     <div class="relative3">
                         <div class="form-group">
-                            <div class="custom-control custom-checkbox">
+                            <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="check-opacity">
                                 <label class="custom-control-label" for="check-opacity">Opacity</label>
                             </div>
-                            <div class="custom-control custom-checkbox">
+                            <div class="custom-control  custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="check-samples">
                                 <label class="custom-control-label" for="check-samples">Sample</label>
                             </div>
+                        </div>
+                        <!-- -5,-4,-3,-2,-1,0,1,2,3,4,5-->
+                        <div class="form-group">
+                            <label for="xy-plane" class="form-label">f(x,y)=const.</label>
+                            <input type="range" class="form-range" min="-3" max="3" step="1" value="0" id="xy-plane">
                         </div>
                     </div>
                 </div>
@@ -41,7 +46,7 @@
                         <div class="col-12" style="margin:0px;border:0px solid #AABB00;">
                             <div class="card" style="border:1px solid #CCCCCC;margin-top:5px;">
                                 <div class="card-body">
-                                    <h4 class="card-title func-title">ax + by + c = 0</h4>
+                                    <h4 class="card-title func-title">ax + by + c = <span id="fc_value">0</span></h4>
                                     <div id="graph-dx" style="height:400px;border:0px solid #0000FF;margin-top:10px;"></div>
                                 </div>
                             </div> 
@@ -184,9 +189,7 @@
                                     z:{ show:false, highlight:false, }
                                   }
                 };
-                
-                z_zero = X.map( function(value, index) {return 0;} );
-                
+
                 var xyplane = {
                         type: 'surface', 
                         z: Z, x: X,  y: Y,
@@ -201,7 +204,7 @@
                                   }
                 };
                 
-                
+                z_zero = X.map( function(value, index) {return 0;} );
 				y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
 				var line_3d = {
 					    type: 'scatter3d',
@@ -330,8 +333,6 @@
                     }
                 }
                 
-				
-
                 var layouts  = {
                         '3d-square' : {
                             hovermode:'closest',
@@ -372,9 +373,9 @@
                     Plotly.restyle(GRAPH1, 'opacity', 1.0, 0);
                 }); 
 				
+                // 샘플 보이기를 조정하는 이벤트 핸들러
                 $("#check-samples").change(function () {
                     if ($(this).prop("checked")) {
-                        console.log('show')
                         var update = {
                             visible: [true, true, true, true], 
                         }
@@ -396,14 +397,34 @@
                     Plotly.restyle(GRAPH_DX, update, [1, 2]);
                 }); 
 
+                // xy-plane 높이를 조절하는 이벤트 핸들러
+                $('#xy-plane').on("change mousemove", function() {
+                    fc = parseFloat($(this).val());
+                    $('#fc_value').html(fc);
+                    
+                    // GRAPH1에서 xy-plane, line_3d 업데이트
+                    Z_fc = draw_surface(cost, X, Y, [0, 0, fc]);
+                    z_zero = X.map( function(value, index) {return fc;} );
+                    y = X.map( function(value, index) {return -(a/b)*value-((c-fc)/b);} );
+                    var update = { y:[y, Y], z: [z_zero, Z_fc] };
+                    Plotly.restyle(GRAPH1, update, [1, 4,]);
+
+                    // GRAPH_DX에서 line 업데이트
+                    update = { y: [y] }
+                    Plotly.restyle(GRAPH_DX, update, 0);
+
+                });
+
 				$('#coef_a').on("change mousemove", function() {
 					a = parseFloat($(this).val()) / scale;
                     $('#coef_a_value').html(a);
+
+                    fc = parseFloat($("#xy-plane").val());
                     
                     // redraw
                     // surface, line_3d, xyplane
                     Z = draw_surface(cost, X, Y, [a, b, c]);
-                    y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+                    y = X.map( function(value, index) {return -(a/b)*value-((c-fc)/b);} );
                     
                     // to_the_plane
                     f_pos_z = a*sample_pos[0] + b*sample_pos[1] + c
@@ -424,9 +445,11 @@
 					b = parseFloat($(this).val()) / scale;
                     $('#coef_b_value').html(b);
                     
+                    fc = parseFloat($("#xy-plane").val());
+
                     // redraw
                     Z = draw_surface(cost, X, Y, [a, b, c]);
-                    y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+                    y = X.map( function(value, index) {return -(a/b)*value-((c-fc)/b);} );
 
                     // to_the_plane
                     f_pos_z = a*1 + b*(-1) + c
@@ -446,9 +469,11 @@
 					c = parseFloat($(this).val()) / scale;
                     $('#coef_c_value').html(c);
                     
+                    fc = parseFloat($("#xy-plane").val());
+
                     // redraw
                     Z = draw_surface(cost, X, Y, [a, b, c]);
-                    y = X.map( function(value, index) {return -(a/b)*value-(c/b);} );
+                    y = X.map( function(value, index) {return -(a/b)*value-((c-fc)/b);} );
                     
                     // to_the_plane
                     f_pos_z = a*1 + b*(-1) + c
