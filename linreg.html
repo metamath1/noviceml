@@ -77,7 +77,7 @@
                         
                         <div style="border:0px solid #0000FF;margin-top:20px;margin-left:5px;margin-right:5px;">
                             <div class="form-group">
-                                <select class="custom-select">
+                                <select class="custom-select" id="dataset">
                                     <option value="line">Linear</option>
                                     <option value="sin">Sin</option>
                                 </select>
@@ -86,10 +86,14 @@
                         
                         <div style="border:0px solid #0000FF;margin-top:10px;margin-left:5px;margin-right:5px;">
                             <div class="form-group">
-                                <div class="custom-control custom-checkbox">
+                                <div class="custom-control custom-switch">
                                     <input type="checkbox" class="custom-control-input" id="view-cost">
-                                    <label class="custom-control-label" for="view-cost">View cost</label>
+                                    <label class="custom-control-label" for="view-cost">cost</label>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary btn-sm" id="learn">Learn</button>
+                                <button type="button" class="btn btn-danger btn-sm" id="stop">Stop</button>
                             </div>
                         </div>
                     </div>
@@ -242,6 +246,7 @@
                 //////////////////////////////////////////////////////////////////////////////////////////////
                 var w = 0;
                 var b = 0;
+                var timer_id = -1;
                 
                 // 최초 직선  0*x+0 에 대해서 직선을 한번 그린다.
                 var trace1 = {
@@ -451,6 +456,83 @@
                         return;
                     }
                     Plotly.restyle(GRAPH2, 'visible', false,   1);
+                });
+
+                $("#stop").click(function () {
+                    if(timer_id != -1) {
+                        clearInterval(timer_id);
+                    }
+                });
+
+
+                $("#learn").click(function () {
+                    const eta = 0.01;
+                    const ms = 100;
+                    
+                    cur_data = $("#dataset").val();
+                    train_x = data[cur_data].x;
+                    train_y = data[cur_data].y;
+
+                    is_break = 0;
+
+                    //for (step = 0; step < 1500; step++) {
+                    timer_id = setInterval( function (){
+                        h = train_x.map(function(x){return w*x + b;});
+                        //console.log(w, b)
+
+                        error = h.map(function(item, index) {
+                            return item - train_y[index];
+                        })
+
+                        dw = error.map(function(item, index) {
+                            return item * train_x[index]
+                        }).reduce(function add(sum, currValue) {
+                            return sum + currValue;
+                        }, 0);
+
+                        db = error.reduce(function add(sum, currValue) {
+                            return sum + currValue;
+                        }, 0);
+
+                        //console.log( dw, db );
+                        if (Math.sqrt(dw*dw + db*db) < 1.0e-3) {
+                           console.log('break')
+                           clearInterval(timer_id);
+                        }
+                        //if (is_break >= 100) {
+                        //    console.log(is_break)
+                        //    clearInterval(timer_id);
+                        //}
+
+                        w = w - eta*dw;
+                        b = b - eta*db;
+
+                        $('#w_value').html(w.toPrecision(3));
+                        $('#b_value').html(b.toPrecision(3));
+
+                        $('#cost_meter').html('COST : <span id="cost_value">'+cost(w, b, trace2.x, trace2.y).toFixed(3)+'</span>');
+                        
+                        h = domain[cur_data].map(function(x){return (w*x)+b;} );
+                        
+                        $('#hypothesis').children('td').each(function(i) { 
+                            hs = (w*trace2.x[i]+b).toFixed(3)
+                            if(hs >= 0) hs = '+'+hs.toString();
+                            else hs = hs.toString();
+                            $(this).html(hs);
+                        });
+                        
+                        $('#indivusual_cost').children('td').each(function(i) { 
+                            $(this).html( Math.pow((w*trace2.x[i]+b)-trace2.y[i], 2).toFixed(3) );
+                        });
+                        
+                        Plotly.restyle(GRAPH, {y: [h]}, 0);
+                        Plotly.restyle(GRAPH2, 'y', [[b]], 1);
+                        Plotly.restyle(GRAPH2, 'x', [[w]], 1);
+
+                        is_break += 1;
+                    }, 100);
+
+                    console.log(timer_id)
                 });
             });
         </script>
