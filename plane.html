@@ -39,6 +39,10 @@
                             <label for="xy-plane" class="form-label">f(x,y)=const.</label>
                             <input type="range" class="form-range" min="-3" max="3" step="1" value="0" id="xy-plane">
                         </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary btn-sm" id="learn">Learn</button>
+                            <button type="button" class="btn btn-danger btn-sm" id="stop">Stop</button>
+                        </div>
                     </div>
                 </div>
                 <div class="col-6" style="border:0px solid #FF0000;margin-top:5px;">
@@ -175,6 +179,8 @@
                 var X = linspace(min_x, max_x, step);
                 var Y = linspace(min_y, max_y, step);
                 var Z = draw_surface(cost, X, Y, [a, b, c]);
+
+                var timer_id = -1;
                 
                 var surface = {
                         type: 'surface',
@@ -488,6 +494,89 @@
                     update = { y: [y] }
                     Plotly.restyle(GRAPH_DX, update, 0);
 				});
+
+                $("#stop").click(function () {
+                    console.log("stop");
+                    if(timer_id != -1) {
+                        clearInterval(timer_id);
+                    }
+                });
+
+
+                $("#learn").click(function () {
+                    console.log("learn");
+                    train_x = [sample_pos, sample_neg];
+                    train_y = [1, -1];
+                    eta = 0.01;
+                    epochs = 5000;
+                    
+
+                    timer_id = setInterval( function (){
+                        correct = true;
+
+                        for(j=0; j < 2; j++) {
+                            x_j = train_x[j][0]
+                            y_j = train_x[j][1]
+                            target_j = train_y[j]
+                            score = a*x_j + b*y_j + c
+                            
+                            // unit step
+                            if(score > 0){
+                                o_j = 1;
+                            } else{
+                                o_j = -1;
+                            }
+                            console.log(j, score, a, b, c)
+
+                            if(o_j != target_j) correct = false;
+
+                            dc = eta*(target_j - o_j)     // const, c
+                            da = eta*(target_j - o_j)*x_j // x, a
+                            db = eta*(target_j - o_j)*y_j // y, b
+
+                            c += dc;
+                            a += da;
+                            b += db;
+
+                            // slider update
+                            $('#coef_a').val(a*scale)
+                            $('#coef_a_value').html(a.toPrecision(6));
+
+                            $('#coef_b').val(b*scale)
+                            $('#coef_b_value').html(b.toPrecision(6));
+
+                            $('#coef_c').val(c*scale)
+                            $('#coef_c_value').html(c.toPrecision(6));
+                        }
+
+                        fc = parseFloat($("#xy-plane").val());
+
+                        // redraw
+                        Z = draw_surface(cost, X, Y, [a, b, c]);
+                        y = X.map( function(value, index) {return -(a/b)*value-((c-fc)/b);} );
+
+                        // to_the_plane
+                        f_pos_z = a*1 + b*(-1) + c
+                        f_neg_z = a*2 + b*(-2) + c
+
+                        var update = {
+                                        y: [Y, y, [sample_pos[1],sample_pos[1]], [sample_neg[1],sample_neg[1]]], 
+                                        z: [Z, z_zero, [0,f_pos_z], [0,f_neg_z]]
+                                    }
+                        Plotly.restyle(GRAPH1, update, [0,1,2,3]);
+                        
+                        update = { y: [y] }
+                        Plotly.restyle(GRAPH_DX, update, 0);
+
+                        // stop criterion
+                        if (correct == true) {
+                           console.log('break')
+                           clearInterval(timer_id);
+                        }
+
+
+                    }, 50);
+                });
             });
         </script>
     </body>
