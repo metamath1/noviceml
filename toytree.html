@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Penguin Decision Tree Builder</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;height:100vh;overflow:hidden}
+#app{display:flex;height:100vh}
+#left-panel{width:50%;display:flex;flex-direction:column;border-right:2px solid #ddd;overflow-y:auto}
+#right-panel{width:50%;overflow:auto;position:relative;background:#fafafa}
+#feature-toolbar{padding:12px;border-bottom:1px solid #eee;background:#f8f9fa;flex-shrink:0}
+#feature-toolbar h3{margin-bottom:8px;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.5px}
+.feature-btns{display:flex;gap:8px;flex-wrap:wrap}
+.feature-btn{padding:6px 12px;border:1.5px solid #aaa;border-radius:6px;background:white;cursor:grab;font-size:12px;user-select:none;transition:all .15s}
+.feature-btn:hover{background:#e8f4fd;border-color:#4a90d9}
+.feature-btn.active{background:#4a90d9;color:white;border-color:#4a90d9}
+#charts-area{padding:12px;flex:1;display:flex;flex-direction:column;gap:16px}
+.chart-wrapper{background:white;border:1px solid #eee;border-radius:8px;padding:10px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.chart-title{font-size:12px;font-weight:600;color:#333}
+.chart-close{cursor:pointer;color:#bbb;font-size:18px;line-height:1;padding:0 2px}
+.chart-close:hover{color:#e53e3e}
+#charts-hint{color:#bbb;font-size:13px;text-align:center;padding:60px 20px;line-height:1.8}
+#tree-container{padding:20px;position:relative;min-height:100%;min-width:100%}
+#edges-svg{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+.tree-node{position:absolute}
+.node-box{background:white;border:2px solid #ccc;border-radius:10px;padding:8px 10px;font-size:11px;width:155px;min-height:96px;text-align:center;cursor:default;position:relative;transition:border-color .15s,box-shadow .15s;display:flex;flex-direction:column;justify-content:center}
+.node-box.leaf{border-style:dashed;animation:leafpulse 2.5s ease-in-out infinite}
+.node-box.drag-over{background:#e8f4fd!important;border-color:#4a90d9!important;border-style:dashed!important}
+@keyframes leafpulse{0%,100%{box-shadow:0 0 0 0 rgba(74,144,217,0)}50%{box-shadow:0 0 0 5px rgba(74,144,217,.15)}}
+.node-box.maj-Adelie{border-color:#4e79a7}
+.node-box.maj-Chinstrap{border-color:#f28e2b}
+.node-box.maj-Gentoo{border-color:#59a14f}
+.node-label{font-weight:700;font-size:12px;color:#222;margin-bottom:3px}
+.node-cond{font-size:10px;color:#888;margin-bottom:3px}
+.node-counts{font-size:10px;line-height:1.7;text-align:left;padding-left:4px}
+.sp-Adelie{color:#4e79a7;font-weight:600}
+.sp-Chinstrap{color:#f28e2b;font-weight:600}
+.sp-Gentoo{color:#59a14f;font-weight:600}
+.del-btn{position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:#e53e3e;color:white;border:none;font-size:13px;line-height:20px;text-align:center;cursor:pointer;display:none;z-index:20;padding:0}
+.tree-node:hover .del-btn{display:block}
+.del-btn:hover{background:#c53030}
+.species-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;color:white;margin-bottom:4px;letter-spacing:.2px}
+.badge-Adelie{background:#4e79a7}
+.badge-Chinstrap{background:#f28e2b}
+.badge-Gentoo{background:#59a14f}
+.badge-mixed{background:#999}
+.thresh-widget{position:absolute;background:white;border:1px solid #ddd;border-radius:10px;padding:12px 16px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:50;width:220px;text-align:center}
+.thresh-widget label{display:block;font-size:11px;color:#666;margin-bottom:6px}
+.thresh-widget input[type=range]{width:100%;margin:4px 0}
+.thresh-numval{font-size:14px;font-weight:700;color:#333;margin:4px 0}
+.thresh-preview{font-size:10px;color:#555;margin:6px 0;line-height:1.7;text-align:left}
+.thresh-btns{display:flex;gap:6px;margin-top:8px;justify-content:center}
+.btn-apply{padding:4px 14px;background:#4a90d9;color:white;border:none;border-radius:5px;cursor:pointer;font-size:11px}
+.btn-apply:hover{background:#357abd}
+.btn-cancel{padding:4px 10px;background:#eee;border:none;border-radius:5px;cursor:pointer;font-size:11px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="left-panel">
+    <div id="feature-toolbar">
+      <h3>Features — click to chart · drag to split a node</h3>
+      <div class="feature-btns">
+        <div class="feature-btn" draggable="true" data-feature="bill_length_mm">bill_length_mm</div>
+        <div class="feature-btn" draggable="true" data-feature="bill_depth_mm">bill_depth_mm</div>
+        <div class="feature-btn" draggable="true" data-feature="flipper_length_mm">flipper_length_mm</div>
+        <div class="feature-btn" draggable="true" data-feature="body_mass_g">body_mass_g</div>
+      </div>
+    </div>
+    <div id="charts-area">
+      <div id="charts-hint">Click a feature button to see its density distribution<br>Drag a feature button onto a tree node to split it</div>
+    </div>
+  </div>
+  <div id="right-panel">
+    <div id="tree-container">
+      <svg id="edges-svg" width="1" height="1"></svg>
+    </div>
+  </div>
+</div>
+<script>
+// ── Dataset ──────────────────────────────────────────────────
+// Palmer Penguins: bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g, species
+const RAW=[
+[39.1,18.7,181,3750,'Adelie'],[39.5,17.4,186,3800,'Adelie'],[40.3,18.0,195,3250,'Adelie'],
+[36.7,19.3,193,3450,'Adelie'],[39.3,20.6,190,3650,'Adelie'],[38.9,17.8,181,3625,'Adelie'],
+[39.2,19.6,195,4675,'Adelie'],[34.1,18.1,193,3475,'Adelie'],[42.0,20.2,190,4250,'Adelie'],
+[37.8,17.1,186,3300,'Adelie'],[37.8,17.3,180,3700,'Adelie'],[41.1,17.6,182,3200,'Adelie'],
+[38.6,21.2,191,3800,'Adelie'],[34.6,21.1,198,4400,'Adelie'],[36.6,17.8,185,3700,'Adelie'],
+[38.7,19.0,195,3450,'Adelie'],[42.5,20.7,197,4500,'Adelie'],[34.4,18.4,184,3325,'Adelie'],
+[46.0,21.5,194,4200,'Adelie'],
+[37.8,18.3,174,3400,'Adelie'],[37.7,18.7,180,3600,'Adelie'],[35.9,19.2,189,3800,'Adelie'],
+[38.2,18.1,185,3950,'Adelie'],[38.8,17.2,180,3800,'Adelie'],[35.3,18.9,187,3800,'Adelie'],
+[40.6,18.6,183,3550,'Adelie'],[40.5,17.9,187,3200,'Adelie'],[37.9,18.6,172,3150,'Adelie'],
+[40.5,18.9,180,3950,'Adelie'],[39.5,16.7,178,3250,'Adelie'],[37.2,18.1,178,3900,'Adelie'],
+[39.5,17.8,188,3300,'Adelie'],[40.9,18.9,184,3800,'Adelie'],[36.4,17.1,184,2850,'Adelie'],
+[39.2,18.6,190,4250,'Adelie'],[38.8,20.0,190,3950,'Adelie'],[42.2,18.5,180,3550,'Adelie'],
+[37.6,19.3,181,3300,'Adelie'],[39.6,17.7,186,3500,'Adelie'],[40.1,18.9,188,4300,'Adelie'],
+[35.0,17.9,190,3450,'Adelie'],[42.0,19.5,200,4050,'Adelie'],[34.5,18.1,187,2900,'Adelie'],
+[41.4,18.6,191,3700,'Adelie'],[39.0,17.5,186,3550,'Adelie'],[40.6,18.8,193,3800,'Adelie'],
+[36.5,16.6,181,2850,'Adelie'],[37.6,19.1,194,3750,'Adelie'],[35.7,16.9,185,3150,'Adelie'],
+[41.3,21.1,195,4400,'Adelie'],[37.6,17.0,185,3600,'Adelie'],[41.1,18.2,192,4050,'Adelie'],
+[36.4,17.1,184,2850,'Adelie'],[41.6,18.0,192,3950,'Adelie'],[35.5,16.2,195,3350,'Adelie'],
+[41.1,19.1,188,4100,'Adelie'],[35.9,16.6,190,3050,'Adelie'],[41.8,19.4,198,4450,'Adelie'],
+[33.5,19.0,190,3600,'Adelie'],[39.7,18.4,190,3900,'Adelie'],[39.6,17.2,196,3550,'Adelie'],
+[45.8,18.9,197,4150,'Adelie'],[35.5,17.5,190,3700,'Adelie'],[42.8,18.5,195,4250,'Adelie'],
+[40.9,16.8,191,3700,'Adelie'],[37.2,19.4,184,3900,'Adelie'],[36.2,16.1,187,3550,'Adelie'],
+[42.1,19.1,195,4000,'Adelie'],
+[39.6,17.2,196,3550,'Adelie'],[40.8,18.9,208,4300,'Adelie'],[38.1,18.6,190,3700,'Adelie'],
+[40.3,19.2,196,4000,'Adelie'],[33.1,16.1,178,2900,'Adelie'],[43.2,18.5,192,4100,'Adelie'],
+[34.6,17.2,189,3200,'Adelie'],[42.9,17.6,196,4700,'Adelie'],[36.7,18.8,187,3800,'Adelie'],
+[35.1,19.4,193,4200,'Adelie'],[37.3,17.8,191,3350,'Adelie'],[41.3,20.3,194,3550,'Adelie'],
+[36.3,19.5,190,3800,'Adelie'],[36.9,18.6,189,3500,'Adelie'],[38.3,19.2,189,3600,'Adelie'],
+[38.9,18.8,190,3600,'Adelie'],[35.7,18.0,202,3550,'Adelie'],[41.1,18.1,205,4300,'Adelie'],
+[34.0,17.1,185,3400,'Adelie'],[39.6,18.1,186,4450,'Adelie'],[36.2,17.3,187,3300,'Adelie'],
+[40.8,18.9,208,4300,'Adelie'],[38.1,18.6,190,3700,'Adelie'],[40.3,19.2,196,4000,'Adelie'],
+[33.1,16.1,178,2900,'Adelie'],[43.2,18.5,192,4100,'Adelie'],[35.7,16.9,185,3150,'Adelie'],
+[37.6,17.0,185,3600,'Adelie'],[41.3,21.1,195,4400,'Adelie'],[42.5,20.7,197,4500,'Adelie'],
+[40.2,17.0,176,3450,'Adelie'],[41.4,18.6,191,3700,'Adelie'],[35.2,15.9,186,3050,'Adelie'],
+[38.8,17.2,180,3800,'Adelie'],[35.3,18.9,187,3800,'Adelie'],[36.6,18.4,184,3475,'Adelie'],
+[37.7,16.0,183,3075,'Adelie'],[43.5,18.1,202,3400,'Adelie'],[37.6,19.1,194,3750,'Adelie'],
+[38.1,16.5,198,3825,'Adelie'],[41.1,19.0,182,3425,'Adelie'],[36.2,16.1,187,3550,'Adelie'],
+[37.7,16.0,183,3075,'Adelie'],[43.2,18.5,192,4100,'Adelie'],[41.8,19.4,198,4450,'Adelie'],
+[35.3,18.9,187,3800,'Adelie'],[39.2,18.6,190,4250,'Adelie'],[38.8,20.0,190,3950,'Adelie'],
+[42.2,18.5,180,3550,'Adelie'],[37.6,19.3,181,3300,'Adelie'],[40.6,18.6,183,3550,'Adelie'],
+[36.5,16.6,181,2850,'Adelie'],[35.7,16.9,185,3150,'Adelie'],[41.3,21.1,195,4400,'Adelie'],
+[36.2,16.1,187,3550,'Adelie'],[42.1,19.1,195,4000,'Adelie'],[44.1,18.0,210,4000,'Adelie'],
+[38.5,17.9,190,3325,'Adelie'],[43.1,19.2,197,3500,'Adelie'],[36.8,18.5,193,3500,'Adelie'],
+[37.5,18.5,199,4475,'Adelie'],[38.1,17.6,187,3425,'Adelie'],[41.1,17.5,190,3900,'Adelie'],
+[35.9,16.6,190,3050,'Adelie'],[39.6,17.7,186,3500,'Adelie'],[42.3,21.2,191,4150,'Adelie'],
+[44.4,17.3,219,5250,'Adelie'],[38.0,17.6,187,3700,'Adelie'],[39.0,17.1,191,3050,'Adelie'],
+[46.2,17.5,187,3650,'Adelie'],[33.5,19.0,190,3600,'Adelie'],
+[41.0,20.0,203,4725,'Adelie'],[39.0,18.7,185,3650,'Adelie'],[38.6,18.9,190,3700,'Adelie'],
+[35.6,17.5,191,3050,'Adelie'],[41.5,18.5,192,4150,'Adelie'],[39.7,17.6,184,3450,'Adelie'],
+[37.4,18.1,186,3475,'Adelie'],
+[46.5,17.9,192,3500,'Chinstrap'],[50.0,19.5,196,3900,'Chinstrap'],[51.3,19.2,193,3650,'Chinstrap'],
+[45.4,18.7,188,3525,'Chinstrap'],[52.7,19.8,197,3725,'Chinstrap'],[45.2,17.8,198,3950,'Chinstrap'],
+[46.1,18.2,178,3250,'Chinstrap'],[51.3,18.2,197,3750,'Chinstrap'],[46.0,18.9,195,4150,'Chinstrap'],
+[51.3,19.9,198,3700,'Chinstrap'],[46.6,17.8,193,3800,'Chinstrap'],[51.7,20.3,194,3775,'Chinstrap'],
+[47.0,17.3,185,3700,'Chinstrap'],[52.0,18.1,201,4050,'Chinstrap'],[45.9,17.1,190,3575,'Chinstrap'],
+[50.5,19.6,201,4050,'Chinstrap'],[50.3,20.0,197,3300,'Chinstrap'],[58.0,17.8,181,3700,'Chinstrap'],
+[46.4,18.6,190,3450,'Chinstrap'],[49.2,18.2,195,4400,'Chinstrap'],[42.4,17.3,181,3600,'Chinstrap'],
+[48.5,17.5,191,3400,'Chinstrap'],[43.2,16.6,187,2900,'Chinstrap'],[50.6,19.4,193,3800,'Chinstrap'],
+[46.7,17.9,195,3300,'Chinstrap'],[52.0,19.0,197,4150,'Chinstrap'],[50.5,18.4,200,3400,'Chinstrap'],
+[49.5,19.0,200,3800,'Chinstrap'],[46.4,17.8,191,3700,'Chinstrap'],[52.8,20.0,205,4550,'Chinstrap'],
+[40.9,16.6,187,3200,'Chinstrap'],[54.2,20.8,201,4300,'Chinstrap'],[42.5,16.7,187,3350,'Chinstrap'],
+[51.0,18.8,203,4100,'Chinstrap'],[49.7,18.6,195,3600,'Chinstrap'],[47.5,16.8,199,3900,'Chinstrap'],
+[47.6,18.3,195,3850,'Chinstrap'],[52.1,17.0,198,3415,'Chinstrap'],[47.5,18.1,199,3400,'Chinstrap'],
+[45.9,18.1,190,3635,'Chinstrap'],[49.1,19.1,188,3395,'Chinstrap'],[46.6,18.7,195,3800,'Chinstrap'],
+[48.7,18.1,193,3800,'Chinstrap'],[50.0,18.7,198,3775,'Chinstrap'],[42.9,18.0,185,3025,'Chinstrap'],
+[51.3,18.0,191,3750,'Chinstrap'],[47.7,15.0,196,3050,'Chinstrap'],
+[45.1,17.9,190,3400,'Chinstrap'],[50.1,17.9,190,3400,'Chinstrap'],
+[46.5,17.0,182,3150,'Chinstrap'],[45.9,17.5,190,3700,'Chinstrap'],[52.0,19.4,206,4000,'Chinstrap'],
+[45.7,19.1,193,4200,'Chinstrap'],[50.7,19.7,203,4050,'Chinstrap'],[42.5,17.3,187,3350,'Chinstrap'],
+[51.3,18.5,201,3950,'Chinstrap'],[44.6,15.7,185,3200,'Chinstrap'],[51.3,18.0,191,3750,'Chinstrap'],
+[46.4,15.6,190,3100,'Chinstrap'],[51.5,16.3,193,3700,'Chinstrap'],[49.5,19.0,200,3800,'Chinstrap'],
+[45.9,19.1,190,3500,'Chinstrap'],[50.1,17.9,190,3400,'Chinstrap'],[50.5,19.6,201,4050,'Chinstrap'],
+[46.5,18.0,182,3150,'Chinstrap'],[46.9,16.6,192,2700,'Chinstrap'],[53.5,19.9,205,4500,'Chinstrap'],
+[49.0,19.5,210,3950,'Chinstrap'],
+[46.1,13.2,211,4500,'Gentoo'],[50.0,16.3,230,5700,'Gentoo'],[48.7,14.1,210,4450,'Gentoo'],
+[50.0,15.2,218,5700,'Gentoo'],[47.6,14.5,215,5400,'Gentoo'],[46.5,13.5,210,4550,'Gentoo'],
+[45.4,14.6,211,4800,'Gentoo'],[46.7,15.3,219,5200,'Gentoo'],[43.3,13.4,209,4400,'Gentoo'],
+[46.8,15.4,215,5150,'Gentoo'],[40.9,13.7,214,4650,'Gentoo'],[49.0,16.1,216,5550,'Gentoo'],
+[45.5,13.7,214,4650,'Gentoo'],[48.4,14.6,213,4800,'Gentoo'],[45.8,14.6,210,4150,'Gentoo'],
+[49.3,15.7,217,5850,'Gentoo'],[42.0,13.5,210,4150,'Gentoo'],[49.2,15.2,221,6300,'Gentoo'],
+[46.2,14.5,209,4800,'Gentoo'],[48.7,15.1,222,5350,'Gentoo'],[50.2,14.3,218,5700,'Gentoo'],
+[45.1,14.5,215,5000,'Gentoo'],[46.5,14.5,213,4400,'Gentoo'],[46.3,15.8,215,5050,'Gentoo'],
+[42.9,13.1,215,5000,'Gentoo'],[46.1,15.1,215,5100,'Gentoo'],[44.5,14.3,216,4100,'Gentoo'],
+[47.8,15.0,215,5650,'Gentoo'],[48.2,14.3,210,4600,'Gentoo'],[50.0,15.3,220,5550,'Gentoo'],
+[42.2,14.4,209,4300,'Gentoo'],[46.5,13.5,210,4550,'Gentoo'],[46.0,14.2,208,4600,'Gentoo'],
+[44.5,15.7,217,4875,'Gentoo'],[48.8,16.2,222,6000,'Gentoo'],[47.2,13.7,214,4925,'Gentoo'],
+[46.8,14.3,215,4850,'Gentoo'],[50.4,15.7,222,5750,'Gentoo'],[45.2,14.8,212,5200,'Gentoo'],
+[49.9,16.1,213,5400,'Gentoo'],[46.7,14.6,213,4925,'Gentoo'],[47.4,14.6,212,4600,'Gentoo'],
+[48.0,14.3,210,4600,'Gentoo'],[47.3,15.3,222,5250,'Gentoo'],[45.8,14.2,219,4700,'Gentoo'],
+[43.5,14.2,220,4700,'Gentoo'],[45.1,14.5,207,5050,'Gentoo'],[55.9,17.0,228,5600,'Gentoo'],
+[46.8,15.4,215,5150,'Gentoo'],[49.1,14.8,220,5150,'Gentoo'],[53.4,15.8,219,5500,'Gentoo'],
+[49.0,19.6,212,4300,'Gentoo'],[46.2,15.3,213,4800,'Gentoo'],[46.2,13.4,214,4400,'Gentoo'],
+[49.5,15.0,219,5700,'Gentoo'],[43.5,15.2,213,4650,'Gentoo'],[50.7,15.0,223,5550,'Gentoo'],
+[47.7,15.0,216,4750,'Gentoo'],[46.4,15.6,221,5000,'Gentoo'],[48.2,15.6,221,5100,'Gentoo'],
+[46.5,14.8,217,5200,'Gentoo'],[46.4,15.0,216,4700,'Gentoo'],[48.6,16.0,230,5800,'Gentoo'],
+[47.5,14.2,209,4600,'Gentoo'],[51.1,16.3,220,6000,'Gentoo'],[45.2,13.8,215,4750,'Gentoo'],
+[45.2,16.4,223,5950,'Gentoo'],[49.1,14.5,212,4625,'Gentoo'],[52.5,15.6,221,5450,'Gentoo'],
+[47.4,14.6,212,4600,'Gentoo'],[50.0,15.9,224,5350,'Gentoo'],[44.9,13.3,213,5100,'Gentoo'],
+[50.8,17.3,228,5600,'Gentoo'],[43.4,14.4,218,4600,'Gentoo'],[51.3,14.2,218,5300,'Gentoo'],
+[47.5,14.0,212,4875,'Gentoo'],[52.1,17.0,230,5550,'Gentoo'],[47.5,15.0,218,5000,'Gentoo'],
+[52.2,17.1,228,5400,'Gentoo'],[45.5,15.0,210,4800,'Gentoo'],[49.5,16.2,229,5800,'Gentoo'],
+[44.5,14.7,214,4850,'Gentoo'],[50.8,15.7,226,5200,'Gentoo'],[49.4,15.8,216,4925,'Gentoo'],
+[46.9,14.6,222,4875,'Gentoo'],[48.4,16.3,220,5400,'Gentoo'],[51.1,16.5,225,5250,'Gentoo'],
+[45.8,14.6,210,4150,'Gentoo'],[47.2,15.5,215,4975,'Gentoo'],[49.1,15.0,228,5500,'Gentoo'],
+[47.3,13.8,216,4300,'Gentoo'],[46.8,16.1,215,5500,'Gentoo'],[41.7,14.7,210,4700,'Gentoo'],
+[53.4,15.8,219,5500,'Gentoo'],[43.3,14.0,208,4575,'Gentoo'],[48.1,15.1,209,5500,'Gentoo'],
+[50.5,15.2,216,5000,'Gentoo'],[49.8,15.9,229,5950,'Gentoo'],[43.5,15.2,213,4650,'Gentoo'],
+[51.5,16.3,230,5500,'Gentoo'],[46.2,14.1,217,4375,'Gentoo'],[55.1,16.0,230,5850,'Gentoo'],
+[44.5,15.7,217,4875,'Gentoo'],[48.8,16.2,222,6000,'Gentoo'],[47.2,13.7,214,4925,'Gentoo'],
+[46.8,14.3,215,4850,'Gentoo'],[50.4,15.7,222,5750,'Gentoo'],[45.2,14.8,212,5200,'Gentoo'],
+[49.9,16.1,213,5400,'Gentoo'],[42.6,13.7,213,4950,'Gentoo'],[44.0,13.6,208,4350,'Gentoo'],
+[51.1,16.3,220,6000,'Gentoo'],[47.6,14.5,215,5400,'Gentoo'],[50.0,15.2,218,5700,'Gentoo'],
+[50.1,15.0,225,5000,'Gentoo'],[48.5,14.8,220,5100,'Gentoo'],[51.4,15.0,224,5650,'Gentoo'],
+[44.1,14.4,210,4600,'Gentoo'],[52.7,15.7,228,5400,'Gentoo']
+];
+
+const PENGUINS = RAW.map((r,i)=>({i,bill_length_mm:r[0],bill_depth_mm:r[1],flipper_length_mm:r[2],body_mass_g:r[3],species:r[4]}));
+const FEATURES=['bill_length_mm','bill_depth_mm','flipper_length_mm','body_mass_g'];
+const SPECIES=['Adelie','Chinstrap','Gentoo'];
+const SCOL={Adelie:'#4e79a7',Chinstrap:'#f28e2b',Gentoo:'#59a14f'};
+
+// ── KDE ──────────────────────────────────────────────────────
+function pct(arr,p){const s=[...arr].sort((a,b)=>a-b);const i=(p/100)*(s.length-1);const lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo)}
+function silverman(vals){const n=vals.length;const m=vals.reduce((s,v)=>s+v,0)/n;const sd=Math.sqrt(vals.reduce((s,v)=>s+(v-m)**2,0)/(n-1));const iqr=pct(vals,75)-pct(vals,25);const s=Math.min(sd,iqr/1.34);return 1.06*s*Math.pow(n,-0.2)}
+function kde(vals,bw,xs){return xs.map(x=>vals.reduce((s,v)=>s+Math.exp(-0.5*((x-v)/bw)**2)/(Math.sqrt(2*Math.PI)*bw),0)/vals.length)}
+
+// ── Charts ───────────────────────────────────────────────────
+const chartInstances={};
+function toggleChart(feat){
+  const btn=document.querySelector(`.feature-btn[data-feature="${feat}"]`);
+  const area=document.getElementById('charts-area');
+  if(chartInstances[feat]){
+    chartInstances[feat].chart.destroy();
+    chartInstances[feat].el.remove();
+    delete chartInstances[feat];
+    btn.classList.remove('active');
+    return;
+  }
+  btn.classList.add('active');
+  const hint=document.getElementById('charts-hint');
+  if(hint)hint.remove();
+  const wrap=document.createElement('div');
+  wrap.className='chart-wrapper';
+  wrap.innerHTML=`<div class="chart-header"><span class="chart-title">${feat}</span><span class="chart-close" data-f="${feat}">×</span></div><canvas id="c-${feat}" height="150"></canvas>`;
+  area.appendChild(wrap);
+  wrap.querySelector('.chart-close').addEventListener('click',()=>toggleChart(feat));
+  const allV=PENGUINS.map(p=>p[feat]);
+  const mn=Math.min(...allV),mx=Math.max(...allV),rng=mx-mn;
+  const xs=Array.from({length:120},(_,i)=>mn-rng*.05+(rng*1.1)*i/119);
+  const datasets=SPECIES.map(sp=>{
+    const v=PENGUINS.filter(p=>p.species===sp).map(p=>p[feat]);
+    const bw=silverman(v);
+    const ys=kde(v,bw,xs);
+    return{label:sp,data:xs.map((x,i)=>({x,y:ys[i]})),borderColor:SCOL[sp],backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.3};
+  });
+  const ch=new Chart(document.getElementById(`c-${feat}`),{type:'line',data:{datasets},options:{responsive:true,plugins:{legend:{labels:{boxWidth:12,font:{size:12}}}},scales:{x:{type:'linear',ticks:{font:{size:11}},title:{display:true,text:feat,font:{size:14,weight:'bold'}}},y:{ticks:{font:{size:11}},title:{display:true,text:'Density',font:{size:14,weight:'bold'}},min:0}}}});
+  chartInstances[feat]={chart:ch,el:wrap};
+}
+
+// ── Tree Model ───────────────────────────────────────────────
+let nid=0;
+let nodes={};
+const NW=155,NH=100,HGAP=30,VGAP=80;
+
+function mkNode(id,parentId,side,idx){return{id,parentId,side,idx,feat:null,thresh:null,ch:[]}}
+function counts(idx){const c={Adelie:0,Chinstrap:0,Gentoo:0};idx.forEach(i=>c[PENGUINS[i].species]++);return c}
+function majority(idx){const c=counts(idx);const tot=idx.length;if(!tot)return'mixed';const mx=Math.max(c.Adelie,c.Chinstrap,c.Gentoo);const sp=SPECIES.find(s=>c[s]===mx);return(c[sp]/tot>=0.5)?sp:'mixed'}
+
+function subtreeW(id){
+  const n=nodes[id];if(!n)return NW;
+  if(!n.ch.length)return NW;
+  return subtreeW(n.ch[0])+HGAP+subtreeW(n.ch[1]);
+}
+function layout(id,x,y){
+  const n=nodes[id];if(!n)return{};
+  const sw=subtreeW(id);
+  const res={};
+  res[id]={x:x+(sw-NW)/2,y,w:NW,h:NH};
+  if(n.ch.length===2){
+    const lw=subtreeW(n.ch[0]);
+    Object.assign(res,layout(n.ch[0],x,y+NH+VGAP));
+    Object.assign(res,layout(n.ch[1],x+lw+HGAP,y+NH+VGAP));
+  }
+  return res;
+}
+
+function renderTree(){
+  const tc=document.getElementById('tree-container');
+  tc.querySelectorAll('.tree-node,.thresh-widget').forEach(e=>e.remove());
+  const pos=layout('root',getStartX(),24);
+  let maxX=0,maxY=0;
+  Object.values(pos).forEach(p=>{maxX=Math.max(maxX,p.x+NW+20);maxY=Math.max(maxY,p.y+NH+20)});
+  const svg=document.getElementById('edges-svg');
+  svg.setAttribute('width',maxX);svg.setAttribute('height',maxY);svg.innerHTML='';
+
+  Object.keys(pos).forEach(id=>{
+    const n=nodes[id];if(!n)return;
+    const p=pos[id];
+    // edge
+    if(n.parentId&&pos[n.parentId]){
+      const pp=pos[n.parentId];
+      const x1=pp.x+NW/2,y1=pp.y+NH,x2=p.x+NW/2,y2=p.y;
+      const my=(y1+y2)/2;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+      path.setAttribute('stroke','#ccc');path.setAttribute('stroke-width','1.5');path.setAttribute('fill','none');
+      svg.appendChild(path);
+      const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
+      lbl.setAttribute('x',(x1+x2)/2+(n.side==='left'?-18:4));
+      lbl.setAttribute('y',my);lbl.setAttribute('font-size','9');lbl.setAttribute('fill','#bbb');
+      const parThresh=nodes[n.parentId]?.thresh;
+      lbl.textContent=n.side==='left'?(parThresh?`< ${parThresh.toFixed(1)}`:'< thresh'):(parThresh?`≥ ${parThresh.toFixed(1)}`:'≥ thresh');
+      svg.appendChild(lbl);
+    }
+    // node element
+    const c=counts(n.idx);
+    const maj=majority(n.idx);
+    const isLeaf=!n.ch.length;
+    const isRoot=id==='root';
+    const div=document.createElement('div');
+    div.className='tree-node';div.id=`tn-${id}`;
+    div.style.cssText=`left:${p.x}px;top:${p.y}px;width:${NW}px`;
+    const ctHtml=SPECIES.map(s=>`<div class="sp-${s}">${s}: ${c[s]}</div>`).join('');
+    // Header: split condition for internal nodes, species badge for leaf nodes, 'Root' for unsplit root
+    let headHtml;
+    if(n.feat){
+      headHtml=`<div class="node-label">${n.feat} &lt; ${n.thresh.toFixed(2)}</div>`;
+    } else if(isRoot){
+      headHtml=`<div class="node-label">Root</div>`;
+    } else {
+      const badgeName=maj==='mixed'?'Mixed':maj;
+      headHtml=`<div class="node-label"><span class="species-badge badge-${maj}">${badgeName}</span></div>`;
+    }
+    div.innerHTML=`<div class="node-box${isLeaf?' leaf':''} maj-${maj}" id="nb-${id}">${headHtml}<div class="node-counts">${ctHtml}</div>${!isRoot?`<button class="del-btn" onclick="delNode('${id}')">×</button>`:''}</div>`;
+    const box=div.querySelector('.node-box');
+    if(isLeaf){
+      box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('drag-over')});
+      box.addEventListener('dragleave',()=>box.classList.remove('drag-over'));
+      box.addEventListener('drop',e=>{e.preventDefault();box.classList.remove('drag-over');if(dragging)showSlider(id,dragging)});
+    }
+    tc.appendChild(div);
+  });
+}
+
+// ── Drag ─────────────────────────────────────────────────────
+let dragging=null;
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.feature-btn').forEach(b=>{
+    b.addEventListener('click',()=>toggleChart(b.dataset.feature));
+    b.addEventListener('dragstart',e=>{dragging=b.dataset.feature;e.dataTransfer.setData('text',b.dataset.feature)});
+    b.addEventListener('dragend',()=>{dragging=null});
+  });
+  nodes={root:mkNode('root',null,null,PENGUINS.map((_,i)=>i))};
+  renderTree();
+});
+
+// ── Slider ───────────────────────────────────────────────────
+function getStartX(){
+  const pw=document.getElementById('right-panel').clientWidth||600;
+  return Math.max(20,(pw-subtreeW('root'))/2);
+}
+
+function showSlider(nodeId,feat){
+  document.querySelectorAll('.thresh-widget,.preview-node').forEach(e=>e.remove());
+  const n=nodes[nodeId];
+  const vals=n.idx.map(i=>PENGUINS[i][feat]);
+  const mn=Math.min(...vals),mx=Math.max(...vals),mid=(mn+mx)/2;
+  const tc=document.getElementById('tree-container');
+  const pos=layout('root',getStartX(),24);
+  const p=pos[nodeId];if(!p)return;
+
+  // Slider widget centered below the node
+  const w=document.createElement('div');
+  w.className='thresh-widget';w.id=`sw-${nodeId}`;
+  w.style.cssText=`left:${p.x}px;top:${p.y+NH+8}px;width:${NW}px;box-sizing:border-box`;
+  w.innerHTML=`<label>Split <b>${feat}</b></label>
+    <input type="range" id="sr-${nodeId}" min="${mn}" max="${mx}" step="${(mx-mn)/200}" value="${mid}">
+    <div class="thresh-numval" id="sv-${nodeId}">${mid.toFixed(2)}</div>
+    <div style="font-size:9px;color:#aaa;margin-top:2px">Release to commit · <span style="cursor:pointer;color:#e53e3e" onclick="document.querySelectorAll('.thresh-widget,.preview-node').forEach(e=>e.remove())">Cancel</span></div>`;
+  tc.appendChild(w);
+
+  const sl=document.getElementById(`sr-${nodeId}`);
+  const previewY=p.y+NH+VGAP+60; // below slider
+  const leftPrevX=p.x-NW/2-HGAP/2;
+  const rightPrevX=p.x+NW/2+HGAP/2;
+
+  function updatePreview(t){
+    document.getElementById(`sv-${nodeId}`).textContent=t.toFixed(2);
+    tc.querySelectorAll('.preview-node').forEach(e=>e.remove());
+    const li=n.idx.filter(i=>PENGUINS[i][feat]<t);
+    const ri=n.idx.filter(i=>PENGUINS[i][feat]>=t);
+    const lc=counts(li),rc=counts(ri);
+    const lmaj=li.length?majority(li):'mixed';
+    const rmaj=ri.length?majority(ri):'mixed';
+    [[leftPrevX,lc,lmaj,`< ${t.toFixed(1)}`,li.length],[rightPrevX,rc,rmaj,`≥ ${t.toFixed(1)}`,ri.length]].forEach(([x,c,maj,lbl,n])=>{
+      const d=document.createElement('div');
+      d.className='tree-node preview-node';
+      d.style.cssText=`left:${x}px;top:${previewY}px;width:${NW}px;opacity:.65;pointer-events:none`;
+      d.innerHTML=`<div class="node-box leaf maj-${maj}"><div class="node-label" style="font-size:10px">${lbl} (n=${n})</div><div class="node-counts">${SPECIES.map(s=>`<div class="sp-${s}">${s}: ${c[s]}</div>`).join('')}</div></div>`;
+      tc.appendChild(d);
+    });
+    sl.dataset.t=t;
+  }
+
+  sl.addEventListener('input',()=>updatePreview(parseFloat(sl.value)));
+  sl.addEventListener('change',()=>commitSplit(nodeId,feat,parseFloat(sl.dataset.t||sl.value)));
+  updatePreview(mid);
+}
+
+function commitSplit(nodeId,feat,t){
+  const n=nodes[nodeId];if(!n)return;
+  const li=n.idx.filter(i=>PENGUINS[i][feat]<t);
+  const ri=n.idx.filter(i=>PENGUINS[i][feat]>=t);
+  if(!li.length||!ri.length)return;
+  n.feat=feat;n.thresh=t;
+  const lid=`n${++nid}`,rid=`n${++nid}`;
+  nodes[lid]=mkNode(lid,nodeId,'left',li);
+  nodes[rid]=mkNode(rid,nodeId,'right',ri);
+  n.ch=[lid,rid];
+  document.querySelectorAll('.thresh-widget,.preview-node').forEach(e=>e.remove());
+  renderTree();
+}
+
+// ── Delete ───────────────────────────────────────────────────
+function delNode(id){
+  const n=nodes[id];if(!n||!n.parentId)return;
+  function rmTree(nid){const nd=nodes[nid];if(!nd)return;[...nd.ch].forEach(c=>rmTree(c));delete nodes[nid]}
+  const par=nodes[n.parentId];
+  if(par){
+    // Remove both children (clicked node + sibling) and all descendants
+    [...par.ch].forEach(cid=>rmTree(cid));
+    par.feat=null;par.thresh=null;par.ch=[];
+  }
+  renderTree();
+}
+</script>
+</body>
+</html>
